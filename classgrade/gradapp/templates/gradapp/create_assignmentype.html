@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% load staticfiles %}
+{% load crispy_forms_tags %}
 
 {% block title %}
 
@@ -17,7 +18,7 @@ Create an assignment!
             <div class="chart-stage">
                <form action="{% url 'gradapp:create_assignmentype' %}" method="post" enctype="multipart/form-data">
                        {% csrf_token %}
-                       {{ form.as_p }}
+                       {{ form|crispy }}
                        {% if error %}
                            <p><font color="#FA2A00">{{ error }}</font></p>
                        {% endif %}

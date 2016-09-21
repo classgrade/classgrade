@@ -44,6 +44,7 @@ class Assignmentype(models.Model):
     :type deadline_submission: TextField(max_length=500)
     :type deadline_grading: TextField(max_length=500)
     """
+    title = models.CharField(max_length=100, default='')
     description = models.TextField(max_length=500)
     nb_graders = models.IntegerField(default=3)
     file_type = models.CharField(max_length=20, default='ipynb')

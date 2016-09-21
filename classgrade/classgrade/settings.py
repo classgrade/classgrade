@@ -138,3 +138,4 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
 # Login
 LOGIN_REDIRECT_URL = 'gradapp:index'
+LOGOUT_REDIRECT_URL = 'gradapp:index'

@@ -51,9 +51,7 @@ class Assignmentype(models.Model):
     deadline_submission = models.DateTimeField()
     deadline_grading = models.DateTimeField()
     prof = models.ForeignKey(Prof)
-    list_student = models.ManyToManyField(Student, through='Assignment',
-                                          through_fields=('assignmentype',
-                                                          'student'))
+    list_students = models.FileField(max_length=100, null=True, blank=True)
 
     def __str__(self):
         return 'AssignmentType(id {}, prof {}, description {})'.\

@@ -48,8 +48,8 @@ class Assignmentype(models.Model):
     description = models.TextField(max_length=500)
     nb_graders = models.IntegerField(default=3)
     file_type = models.CharField(max_length=20, default='ipynb')
-    deadline_submission = models.DateTimeField()
-    deadline_grading = models.DateTimeField()
+    deadline_submission = models.DateTimeField(help_text='DD/MM/YY')
+    deadline_grading = models.DateTimeField(help_text='DD/MM/YY')
     prof = models.ForeignKey(Prof)
     list_students = models.FileField(max_length=100, null=True, blank=True,
                                      help_text='csv file, each row contains'

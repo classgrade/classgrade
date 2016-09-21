@@ -19,5 +19,7 @@ from django.contrib import admin
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^', include('gradapp.urls', namespace='gradapp')),
-    url(r'^accounts/', include('registration.backends.default.urls')),
+    url(r'^accounts/', include('django.contrib.auth.urls',
+                               namespace='accounts')),
+    url(r'^accounts-reset/', include('password_reset.urls')),
 ]

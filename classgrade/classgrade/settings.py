@@ -33,8 +33,7 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'gradapp.apps.GradappConfig',
     'django.contrib.admin',
-    'django.contrib.sites',
-    'registration',
+    'password_reset',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -137,8 +136,5 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 SERVER_EMAIL = EMAIL_HOST_USER
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
-# For registration (django-registration-redux)
-# http://django-registration-redux.readthedocs.io/en/latest/quickstart.html
-ACCOUNT_ACTIVATION_DAYS = 7
-REGISTRATION_AUTO_LOGIN = True
-LOGIN_REDIRECT_URL = '/'
+# Login
+LOGIN_REDIRECT_URL = 'gradapp:index'

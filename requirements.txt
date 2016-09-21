@@ -1,2 +1,7 @@
 Django==1.10.1
+django-registration-redux==1.4
+oauthlib==2.0.0
 psycopg2==2.6.2
+python-openid==2.2.5
+requests==2.11.1
+requests-oauthlib==0.6.2

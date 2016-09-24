@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% load staticfiles %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+
+Validate students for assignment "{{ assignmentype.title }}"
+
+{% endblock title %}
+
+{% block content %}
+
+
+<div class="row">
+	<div class="col-lg-12">
+        <div class="chart-wrapper">
+            <div class="chart-stage">
+	    		<p>If you validate the following students will be associated to the assignment:</p>
+	            <div class="row">
+                <div class="col-lg-6"> 
+                    <div class="chart-wrapper">
+                        <div class="chart-title">
+                            New students
+                        </div> 
+                        <div class="chart-stage">
+                            <table class="table table-striped">
+                                <thead>
+                                  <tr>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+	            				  {% for us, em in new_students %}
+                                      <tr>
+                                        <td>{{ us }}</td>
+                                        <td>{{ em }}</td>
+                                      </tr>
+                                  {% endfor %}
+                                </tbody>
+                            </table>
+                        </div> 
+                    </div>
+                </div>
+                <div class="col-lg-6"> 
+                    <div class="chart-wrapper">
+                        <div class="chart-title">
+                            Existing students
+                        </div> 
+                        <div class="chart-stage">
+                            <table class="table table-striped">
+                                <thead>
+                                  <tr>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+	            				  {% for us, em in existing_students %}
+                                      <tr>
+                                        <td>{{ us }}</td>
+                                        <td>{{ em }}</td>
+                                      </tr>
+                                  {% endfor %}
+                                </tbody>
+                            </table>
+                        </div> 
+                    </div>
+        		</div> <!-- col-lg-6-->
+         	    </div> <!-- row -->
+			<p>
+            <a class="btn btn-info" href="{% url 'gradapp:update_assignmentype' assignmentype_id=assignmentype.id %}">Resubmit a csv file <span class="glyphicon glyphicon-thumbs-down"></span></a>
+			<a class="btn btn-primary" href="{% url 'gradapp:create_assignmentype_students' %}">Validate  <span class="glyphicon glyphicon-thumbs-up"></span></a>
+			</p> 
+        	</div> <!-- chart-stage -->
+        </div> <!-- chart-wrapper -->
+    </div> <!-- col-lg-12 -->
+</div> <!-- row -->
+{% endblock content %}
+

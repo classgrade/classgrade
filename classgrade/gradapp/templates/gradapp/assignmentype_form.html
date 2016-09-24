@@ -5,7 +5,7 @@
 
 {% block title %}
 
-Create an assignment!
+Assignment
 
 {% endblock title %}
 
@@ -16,7 +16,14 @@ Create an assignment!
     <div class="col-lg-12"> 
         <div class="chart-wrapper">
             <div class="chart-stage">
-               <form action="{% url 'gradapp:create_assignmentype' %}" method="post" enctype="multipart/form-data">
+                <font color="#00BBDE">{{ message }}</font>
+            </div>
+            <div class="chart-stage">
+                {% if assignmentype %}
+                   <form action="{% url 'gradapp:update_assignmentype' assignmentype.id %}" method="post" enctype="multipart/form-data">
+                {% else %}
+                   <form action="{% url 'gradapp:create_assignmentype' %}" method="post" enctype="multipart/form-data">
+                {% endif %}
                        {% csrf_token %}
                        {{ form|crispy }}
                        {% if error %}

@@ -6,4 +6,4 @@ class AssignmentypeForm(ModelForm):
 
     class Meta:
         model = Assignmentype
-        exclude = ['prof']
+        exclude = ['prof', 'archived']

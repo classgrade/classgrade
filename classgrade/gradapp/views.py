@@ -1,17 +1,21 @@
-import csv
 import logging
+import csv
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
+from xkcdpass import xkcd_password as xp
 from gradapp.forms import AssignmentypeForm
 from gradapp.models import Assignment, Assignmentype, Student
-
+from gradapp.tasks import create_evalassignment
 
 logger = logging.getLogger(__name__)
 
 
-def _make_error_message(e):
+def make_error_message(e):
+    """
+    Get error message
+    """
     if hasattr(e, 'traceback'):
         return str(e.traceback)
     else:
@@ -61,7 +65,6 @@ def create_assignmentype(request, assignmentype_id=None):
     else:
         assignmentype = None
         context = {'message': 'Create a new assignment!'}
-    print(assignmentype)
     if request.method == 'POST':
         form = AssignmentypeForm(request.POST, request.FILES,
                                  instance=assignmentype)
@@ -84,7 +87,7 @@ def create_assignmentype(request, assignmentype_id=None):
                     request.session['assignmentype_pk'] = new_assignmentype.pk
                     return redirect("gradapp:validate_assignmentype_students")
                 except Exception as e:
-                    logger.error(_make_error_message(e))
+                    logger.error(make_error_message(e))
                     new_assignmentype.list_students = None
                     new_assignmentype.save()
                     # return details page of assignmentype
@@ -166,21 +169,24 @@ def create_assignmentype_students(request):
     existing_students = request.session.get('existing_students', False)
     new_students = request.session.get('new_students', False)
     assignmentype_pk = request.session.get('assignmentype_pk', False)
-    # TODO define graders
     if assignmentype_pk:
+        words = xp.locate_wordfile()
+        mywords = xp.generate_wordlist(wordfile=words, min_length=4,
+                                       max_length=6)
         assignmentype = Assignmentype.objects.get(id=assignmentype_pk)
         for st in existing_students:
-            u = User.objects.get(username=st[0])
-            student = Student.objects.get(user=u)
+            student = Student.objects.get(user__username=st[0])
             Assignment.objects.get_or_create(student=student,
                                              assignmentype=assignmentype)
+
         for st in new_students:
-            # TODO password
-            password = 'aaa'
+            password = xp.generate_xkcdpassword(mywords, numwords=4)
             u = User.objects.create_user(st[0], st[1], password)
             student = Student.objects.create(user=u)
             Assignment.objects.create(student=student,
                                       assignmentype=assignmentype)
+        log = create_evalassignment(assignmentype.title)
+        logger.info(log)
         return redirect('/detail_assignmentype/%s/' % assignmentype_pk)
     else:
         # TODO return error message

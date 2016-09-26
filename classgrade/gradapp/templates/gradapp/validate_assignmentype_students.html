@@ -71,7 +71,7 @@ Validate students for assignment "{{ assignmentype.title }}"
          	    </div> <!-- row -->
 			<p>
             <a class="btn btn-info" href="{% url 'gradapp:update_assignmentype' assignmentype_id=assignmentype.id %}">Resubmit a csv file <span class="glyphicon glyphicon-thumbs-down"></span></a>
-			<a class="btn btn-primary" href="{% url 'gradapp:create_assignmentype_students' %}">Validate  <span class="glyphicon glyphicon-thumbs-up"></span></a>
+			<a class="btn btn-primary" href="{% url 'gradapp:create_assignmentype_students' %}" onclick="return confirm('If you validate, new students will be created, and all listed students will be associated to this assignment. Are you sure?');">Validate  <span class="glyphicon glyphicon-thumbs-up"></span></a>
 			</p> 
         	</div> <!-- chart-stage -->
         </div> <!-- chart-wrapper -->

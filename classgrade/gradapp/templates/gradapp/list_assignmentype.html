@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% load staticfiles %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+
+Your {{ type_assignmentype }} assignment list:
+
+{% endblock title %}
+
+{% block content %}
+
+
+<div class="row">
+	<div class="col-lg-12">
+        <div class="chart-wrapper">
+            <div class="chart-stage">
+                <table class="table table-striped">
+                    <thead>
+                      <tr>
+                        <th>Title</th>
+                        <th>Number of graders</th>
+                        <th>File type</th>
+                        <th>Deadline submission</th>
+                        <th>Deadline grading</th>
+                        <th>More details</th>
+                        <th>Modify</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+	            	  {% for assignmentype in list_assignmentypes %}
+                          <tr>
+                            <td>{{ assignmentype.title }}</td>
+                            <td>{{ assignmentype.nb_graders }}</td>
+                            <td>{{ assignmentype.file_type }}</td>
+                            <td>{{ assignmentype.deadline_submission }}</td>
+                            <td>{{ assignmentype.deadline_grading }}</td>
+                            <td><a class="btn btn-primary" href="{% url 'gradapp:detail_assignmentype' assignmentype.id %}"> <span class="glyphicon glyphicon-zoom-in"></span></a></td>
+                            <td><a class="btn btn-info" href="{% url 'gradapp:update_assignmentype' assignmentype_id=assignmentype.id %}"> <span class="glyphicon glyphicon-pencil"></span></a></td>
+                          </tr>
+                      {% endfor %}
+                    </tbody>
+                </table>
+        	</div> <!-- chart-stage -->
+        </div> <!-- chart-wrapper -->
+    </div> <!-- col-lg-12 -->
+</div> <!-- row -->
+{% endblock content %}
+

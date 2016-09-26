@@ -26,11 +26,13 @@
         <ul class="nav navbar-nav navbar-left">
             {% if user.prof %}
             <li><a href="{% url 'gradapp:create_assignmentype' %}">Create an assignment</a></li>
+            <li><a href="{% url 'gradapp:list_assignmentypes_new' %}">New assignments</a></li>
+            <li><a href="{% url 'gradapp:list_assignmentypes_past' %}">Past assignments</a></li>
             {% endif %}
-            <li><a href="{% url 'gradapp:index' %}">Blablabla</a></li>
         </ul>
         <ul class="nav navbar-nav navbar-right">
             {% if user.is_authenticated %}
+            <li><a href="#">Hi {{ user.username }}!</a></li>
             <li><a href="{% url 'accounts:logout' %}">Logout</a></li>
             {% else %}
             <li><a href="{% url 'accounts:login' %}">Login</a></li>

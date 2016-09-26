@@ -4,6 +4,8 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
+from django.views.generic.list import ListView
+from django.utils import timezone
 from gradapp.forms import AssignmentypeForm
 from gradapp.models import Assignment, Assignmentype, Student
 
@@ -125,6 +127,7 @@ def create_assignmentype_students(request):
     existing_students = request.session.get('existing_students', False)
     new_students = request.session.get('new_students', False)
     assignmentype_pk = request.session.get('assignmentype_pk', False)
+    # TODO define graders
     if assignmentype_pk:
         assignmentype = Assignmentype.objects.get(id=assignmentype_pk)
         for st in existing_students:
@@ -133,9 +136,53 @@ def create_assignmentype_students(request):
             Assignment.objects.get_or_create(student=student,
                                              assignmentype=assignmentype)
         for st in new_students:
+            # TODO password
             password = 'aaa'
             u = User.objects.create_user(st[0], st[1], password)
             student = Student.objects.create(user=u)
             Assignment.objects.create(student=student,
                                       assignmentype=assignmentype)
-    return redirect('gradapp:index')
+        return redirect('/detail_assignmentype/%s/' % assignmentype_pk)
+    else:
+        # TODO return error message
+        return redirect('gradapp:index')
+
+
+@login_required
+def list_assignmentypes_new(request):
+    try:
+        prof = request.user.prof
+    except ObjectDoesNotExist:
+        return redirect('gradapp:index')
+    context = {'type_assignmentype': 'new', 'prof': prof}
+    context['list_assignmentypes'] = Assignmentype.objects.\
+        filter(deadline_grading__gt=timezone.now(), prof=prof)
+    return render(request, 'gradapp/list_assignmentype.html',
+                  context)
+
+
+@login_required
+def list_assignmentypes_past(request):
+    try:
+        prof = request.user.prof
+    except ObjectDoesNotExist:
+        return redirect('gradapp:index')
+    context = {'type_assignmentype': 'past', 'prof': prof}
+    context['list_assignmentypes'] = Assignmentype.objects.\
+        filter(deadline_grading__lt=timezone.now(), prof=prof)
+    return render(request, 'gradapp/list_assignmentype.html',
+                  context)
+
+
+@login_required
+def detail_assignmentype(request, pk):
+    try:
+        prof = request.user.prof
+    except ObjectDoesNotExist:
+        return redirect('gradapp:index')
+    context = {'prof': prof}
+    assignmentype = Assignmentype.objects.filter(pk=pk, prof=prof).first()
+    if assignmentype:
+        context['assignmentype'] = assignmentype
+        return render(request, 'gradapp/detail_assignmentype.html',
+                      context)

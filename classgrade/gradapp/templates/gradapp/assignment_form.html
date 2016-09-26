@@ -5,7 +5,7 @@
 
 {% block title %}
 
-Assignment
+{{ title }}
 
 {% endblock title %}
 
@@ -16,19 +16,13 @@ Assignment
     <div class="col-lg-12"> 
         <div class="chart-wrapper">
             <div class="chart-title">
-                <font color="#00BBDE">{{ message }}</font>
+                <font color="#00BBDE">Dealine submission: {{ deadline }}</font>
             </div>
             <div class="chart-stage">
-                {% if assignmentype %}
-                   <form action="{% url 'gradapp:update_assignmentype' assignmentype.id %}" method="post" enctype="multipart/form-data">
-                {% else %}
-                   <form action="{% url 'gradapp:create_assignmentype' %}" method="post" enctype="multipart/form-data">
-                {% endif %}
+                <p>{{ description }}</p>
+                <form action="{% url 'gradapp:upload_assignment' assignment_id %}" method="post" enctype="multipart/form-data">
                        {% csrf_token %}
                        {{ form|crispy }}
-                       {% if error %}
-                           <p><font color="#FA2A00">{{ error }}</font></p>
-                       {% endif %}
                        <p><input type="submit" value="Submit" /></p>
                 </form>
             </div> 

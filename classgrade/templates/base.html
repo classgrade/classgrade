@@ -24,6 +24,9 @@
       </div>
       <div class="navbar-collapse collapse">
         <ul class="nav navbar-nav navbar-left">
+            {% if user.student %}
+            <li><a href="{% url 'gradapp:dashboard_student' %}">Dashboard</a></li>
+            {% endif %}
             {% if user.prof %}
             <li><a href="{% url 'gradapp:create_assignmentype' %}">Create an assignment</a></li>
             <li><a href="{% url 'gradapp:list_assignmentypes_running' %}">Running assignments</a></li>

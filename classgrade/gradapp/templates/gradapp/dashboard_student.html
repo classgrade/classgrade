@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% load staticfiles %}
+
+{% block title %}
+
+Hi {{ student_name }}!
+
+{% endblock title %}
+
+{% block content %}
+
+
+<div class="row">
+	<div class="col-lg-12">
+        <div class="chart-wrapper">
+            <div class="chart-stage">
+            
+                {% for title, description, deadline_submission, deadline_grading, id, to_be_evaluated in list_assignments %}    
+                    <div class="chart-wrapper">
+                        <div class="chart-title">
+                            {{ title }}
+                        </div>
+                        <div class="chart-stage">
+                            <div class="col-lg-12">
+                                <p>{{ description|linebreaks }}<p>
+                            </div>
+                            <div class="col-lg-4">
+                               <p> Deadline submission: {{ deadline_submission }}</p>
+                               <p>
+                               <center><a class="btn btn-info" href="{% url 'gradapp:upload_assignment' id %}">Submit your assignment <span class="glyphicon glyphicon-upload"></span></a>
+                               </p>
+                            </div>
+                            <div class="col-lg-8">
+                               <p> Deadline evaluation: {{ deadline_grading }}</p>
+                               {% for i, evalassignment_id in to_be_evaluated %}
+                               <a class="btn btn-primary" href="{% url 'gradapp:index' %}">Evaluation {{ i }} <span class="glyphicon glyphicon-eye-open"></span></a>
+                               {% endfor %}
+                            </div>
+                        </div>
+                    </div> 
+                {% endfor %}
+        	</div> <!-- chart-stage -->
+        </div> <!-- chart-wrapper -->
+    </div> <!-- col-lg-12 -->
+</div> <!-- row -->
+{% endblock content %}
+

@@ -24,4 +24,8 @@ urlpatterns = [
     url(r'^create_assignmentype_students/$',
         views.create_assignmentype_students,
         name='create_assignmentype_students'),
+    url(r'^dashboard_student/$', views.dashboard_student,
+        name='dashboard_student'),
+    url(r'^upload_assignment/(?P<pk>[0-9]+)/$', views.upload_assignment,
+        name='upload_assignment'),
 ]

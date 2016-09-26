@@ -5,8 +5,8 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from xkcdpass import xkcd_password as xp
-from gradapp.forms import AssignmentypeForm
-from gradapp.models import Assignment, Assignmentype, Student
+from gradapp.forms import AssignmentypeForm, AssignmentForm
+from gradapp.models import Assignment, Assignmentype, Student, Evalassignment
 from gradapp.tasks import create_evalassignment
 
 logger = logging.getLogger(__name__)
@@ -51,6 +51,61 @@ def get_students(csv_file):
 def index(request):
     context = {'main_info': 'oh yeah'}
     return render(request, 'gradapp/index.html', context)
+
+
+@login_required
+def dashboard_student(request):
+    """
+    Student dashboard: list all due assignments (to do and to evaluate)
+    """
+    try:
+        student = request.user.student
+    except ObjectDoesNotExist:
+        return redirect('gradapp:index')
+    context = {'student_name': student.user.username}
+    list_assignments = []
+    assignments = student.assignment_set.all().\
+        order_by('assignmentype__deadline_submission')
+    for assignment in assignments:
+        to_be_evaluated = Evalassignment.objects.\
+            filter(evaluator=student,
+                   assignment__assignmentype=assignment.assignmentype)
+        to_be_evaluated = [(i, evalassignment.id) for i, evalassignment in
+                           enumerate(to_be_evaluated)]
+        list_assignments.append([assignment.assignmentype.title,
+                                 assignment.assignmentype.description,
+                                 assignment.assignmentype.deadline_submission,
+                                 assignment.assignmentype.deadline_grading,
+                                 assignment.id, to_be_evaluated])
+    context['list_assignments'] = list_assignments
+    return render(request, 'gradapp/dashboard_student.html', context)
+
+
+@login_required
+def upload_assignment(request, pk):
+    """
+    Upload assignment
+    """
+    try:
+        student = request.user.student
+    except ObjectDoesNotExist:
+        return redirect('gradapp:index')
+    assignment = Assignment.objects.filter(pk=pk, student=student).first()
+    if assignment:
+        if request.method == 'POST':
+            form = AssignmentForm(request.POST, request.FILES,
+                                  instance=assignment)
+            if form.is_valid():
+                form.save()
+        else:
+            form = AssignmentForm(instance=assignment)
+        context = {'form': form, 'title': assignment.assignmentype.title,
+                   'description': assignment.assignmentype.description,
+                   'deadline': assignment.assignmentype.deadline_submission,
+                   'assignment_id': assignment.id}
+        return render(request, 'gradapp/assignment_form.html', context)
+    else:
+        return redirect('gradapp:index')
 
 
 @login_required
@@ -164,7 +219,7 @@ def validate_assignmentype_students(request):
 def create_assignmentype_students(request):
     """
     After validate_assignmentype_students, create new students and associate
-    new+existing students to the assigment
+    new+existing students to the assignment
     """
     existing_students = request.session.get('existing_students', False)
     new_students = request.session.get('new_students', False)
@@ -183,6 +238,7 @@ def create_assignmentype_students(request):
             password = xp.generate_xkcdpassword(mywords, numwords=4)
             u = User.objects.create_user(st[0], st[1], password)
             student = Student.objects.create(user=u)
+            # TODO Send email
             Assignment.objects.create(student=student,
                                       assignmentype=assignmentype)
         log = create_evalassignment(assignmentype.title)
@@ -204,7 +260,7 @@ def list_assignmentypes_running(request):
         return redirect('gradapp:index')
     context = {'type_assignmentype': 'running', 'prof': prof}
     context['list_assignmentypes'] = Assignmentype.objects.\
-        filter(archived=False, prof=prof)
+        filter(archived=False, prof=prof).order_by('deadline_submission')
     return render(request, 'gradapp/list_assignmentype.html',
                   context)
 
@@ -212,7 +268,7 @@ def list_assignmentypes_running(request):
 @login_required
 def list_assignmentypes_archived(request):
     """
-    List all archived assigmentype
+    List all archived assignmentype
     """
     try:
         prof = request.user.prof

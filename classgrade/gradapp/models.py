@@ -54,6 +54,7 @@ class Assignmentype(models.Model):
     list_students = models.FileField(max_length=100, null=True, blank=True,
                                      help_text='csv file, each row contains'
                                                'first_name, last_name, email')
+    archived = models.BooleanField(default=False)
 
     def __str__(self):
         return 'AssignmentType(id {}, prof {}, description {})'.\

@@ -97,10 +97,11 @@ class Evalassignment(models.Model):
     """
     assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE)
     evaluator = models.ForeignKey(Student, on_delete=models.CASCADE)
-    grade_assignment = models.FloatField(null=True, blank=True)
+    grade_assignment = models.FloatField(null=True, blank=True,
+                                         help_text='/10')
     grade_assignment_comments = models.TextField(max_length=300, default='',
                                                  blank=True)
-    grade_evaluation = models.FloatField(null=True, blank=True)
+    grade_evaluation = models.FloatField(null=True, blank=True, help_text='/10')
     grade_evaluation_comments = models.TextField(max_length=300, default='',
                                                  blank=True)
 

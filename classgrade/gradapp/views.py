@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from xkcdpass import xkcd_password as xp
-from gradapp.forms import AssignmentypeForm, AssignmentForm
+from gradapp.forms import AssignmentypeForm, AssignmentForm, EvalassignmentForm
 from gradapp.models import Assignment, Assignmentype, Student, Evalassignment
 from gradapp.tasks import create_evalassignment
 
@@ -104,6 +104,35 @@ def upload_assignment(request, pk):
                    'deadline': assignment.assignmentype.deadline_submission,
                    'assignment_id': assignment.id}
         return render(request, 'gradapp/assignment_form.html', context)
+    else:
+        return redirect('gradapp:index')
+
+
+@login_required
+def eval_assignment(request, pk):
+    """
+    Evaluate the assignment (Evalassignment(pk=pk))
+    """
+    try:
+        student = request.user.student
+    except ObjectDoesNotExist:
+        return redirect('gradapp:index')
+    evalassignment = Evalassignment.objects.filter(pk=pk, evaluator=student).\
+        first()
+    if evalassignment:
+        if request.method == 'POST':
+            form = EvalassignmentForm(request.POST, instance=evalassignment)
+            if form.is_valid():
+                form.save()
+        else:
+            form = EvalassignmentForm(instance=evalassignment)
+        context = {'form': form,
+                   'title': evalassignment.assignment.assignmentype.title,
+                   'assignment_file': evalassignment.assignment.document,
+                   'evalassignment_id': evalassignment.id,
+                   'deadline': evalassignment.assignment.assignmentype.
+                   deadline_grading}
+        return render(request, 'gradapp/evalassignment_form.html', context)
     else:
         return redirect('gradapp:index')
 

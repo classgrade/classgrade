@@ -28,4 +28,6 @@ urlpatterns = [
         name='dashboard_student'),
     url(r'^upload_assignment/(?P<pk>[0-9]+)/$', views.upload_assignment,
         name='upload_assignment'),
+    url(r'^eval_assignment/(?P<pk>[0-9]+)/$', views.eval_assignment,
+        name='eval_assignment'),
 ]

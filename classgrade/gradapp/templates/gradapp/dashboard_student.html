@@ -34,7 +34,7 @@ Hi {{ student_name }}!
                             <div class="col-lg-8">
                                <p> Deadline evaluation: {{ deadline_grading }}</p>
                                {% for i, evalassignment_id in to_be_evaluated %}
-                               <a class="btn btn-primary" href="{% url 'gradapp:index' %}">Evaluation {{ i }} <span class="glyphicon glyphicon-eye-open"></span></a>
+                               <a class="btn btn-primary" href="{% url 'gradapp:eval_assignment' evalassignment_id %}">Evaluation {{ i }} <span class="glyphicon glyphicon-eye-open"></span></a>
                                {% endfor %}
                             </div>
                         </div>

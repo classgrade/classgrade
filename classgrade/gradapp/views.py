@@ -4,8 +4,6 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
-from django.views.generic.list import ListView
-from django.utils import timezone
 from gradapp.forms import AssignmentypeForm
 from gradapp.models import Assignment, Assignmentype, Student
 
@@ -100,6 +98,47 @@ def create_assignmentype(request, assignmentype_id=None):
 
 
 @login_required
+def delete_assignmentype(request, pk, type_list):
+    """
+    Delete assignmentype with id=pk and redirect to list of running
+    assignmentype if type_list=='1', and to list of archived assignmentype
+    if type_list=='0'
+    """
+    try:
+        prof = request.user.prof
+    except ObjectDoesNotExist:
+        return redirect('gradapp:index')
+    assignmentype = Assignmentype.objects.filter(id=pk, prof=prof).first()
+    if assignmentype:
+        assignmentype.delete()
+        if type_list == '1':
+            return redirect('gradapp:list_assignmentypes_running')
+        elif type_list == '0':
+            return redirect('gradapp:list_assignmentypes_archived')
+    else:
+        return redirect('gradapp:index')
+
+
+@login_required
+def archive_assignmentype(request, pk):
+    """
+    Update assignmentype with id=pk and redirect to list of running
+    assignmentype
+    """
+    try:
+        prof = request.user.prof
+    except ObjectDoesNotExist:
+        return redirect('gradapp:index')
+    assignmentype = Assignmentype.objects.filter(id=pk, prof=prof).first()
+    if assignmentype:
+        assignmentype.archived = True
+        assignmentype.save()
+        return redirect('gradapp:list_assignmentypes_archived')
+    else:
+        return redirect('gradapp:index')
+
+
+@login_required
 def validate_assignmentype_students(request):
     """
     When creating an assignment, shows students that will be associated to
@@ -149,27 +188,33 @@ def create_assignmentype_students(request):
 
 
 @login_required
-def list_assignmentypes_new(request):
+def list_assignmentypes_running(request):
+    """
+    List all running (archived=False) assignmentype
+    """
     try:
         prof = request.user.prof
     except ObjectDoesNotExist:
         return redirect('gradapp:index')
-    context = {'type_assignmentype': 'new', 'prof': prof}
+    context = {'type_assignmentype': 'running', 'prof': prof}
     context['list_assignmentypes'] = Assignmentype.objects.\
-        filter(deadline_grading__gt=timezone.now(), prof=prof)
+        filter(archived=False, prof=prof)
     return render(request, 'gradapp/list_assignmentype.html',
                   context)
 
 
 @login_required
-def list_assignmentypes_past(request):
+def list_assignmentypes_archived(request):
+    """
+    List all archived assigmentype
+    """
     try:
         prof = request.user.prof
     except ObjectDoesNotExist:
         return redirect('gradapp:index')
-    context = {'type_assignmentype': 'past', 'prof': prof}
+    context = {'type_assignmentype': 'archived', 'prof': prof}
     context['list_assignmentypes'] = Assignmentype.objects.\
-        filter(deadline_grading__lt=timezone.now(), prof=prof)
+        filter(archived=True, prof=prof)
     return render(request, 'gradapp/list_assignmentype.html',
                   context)
 

@@ -24,8 +24,12 @@ Your {{ type_assignmentype }} assignment list:
                         <th>File type</th>
                         <th>Deadline submission</th>
                         <th>Deadline grading</th>
-                        <th>More details</th>
+                        <th>Details</th>
+                        {% if type_assignmentype == 'running' %}
                         <th>Modify</th>
+                        <th>Archive</th>
+                        {% endif %}
+                        <th>Delete</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -37,7 +41,11 @@ Your {{ type_assignmentype }} assignment list:
                             <td>{{ assignmentype.deadline_submission }}</td>
                             <td>{{ assignmentype.deadline_grading }}</td>
                             <td><a class="btn btn-primary" href="{% url 'gradapp:detail_assignmentype' assignmentype.id %}"> <span class="glyphicon glyphicon-zoom-in"></span></a></td>
+                            {% if type_assignmentype == 'running' %}
                             <td><a class="btn btn-info" href="{% url 'gradapp:update_assignmentype' assignmentype_id=assignmentype.id %}"> <span class="glyphicon glyphicon-pencil"></span></a></td>
+                            <td><a class="btn btn-danger" href="{% url 'gradapp:archive_assignmentype' assignmentype.id %}" onclick="return confirm('Are you sure you want to archive this assignment?');"> <span class="glyphicon glyphicon-pushpin"></span></a></td>
+                            {% endif %}
+                            <td><a class="btn btn-warning" href="{% url 'gradapp:delete_assignmentype' assignmentype.id 1 %}" onclick="return confirm('Are you sure you want to delete this assignment?');"> <span class="glyphicon glyphicon-remove"></span></a></td>
                           </tr>
                       {% endfor %}
                     </tbody>

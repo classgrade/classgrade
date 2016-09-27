@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'crispy_forms',
+    'markdownify',
 ]
 
 MIDDLEWARE = [
@@ -144,3 +145,19 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 # Login
 LOGIN_REDIRECT_URL = 'gradapp:index'
 LOGOUT_REDIRECT_URL = 'gradapp:index'
+
+# Markdownify settings
+MARKDOWNIFY_WHITELIST_TAGS = [
+    'a',
+    'abbr',
+    'acronym',
+    'b',
+    'blockquote',
+    'em',
+    'i',
+    'li',
+    'ol',
+    'p',
+    'strong',
+    'ul'
+]

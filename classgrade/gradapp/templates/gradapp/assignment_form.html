@@ -2,6 +2,7 @@
 
 {% load staticfiles %}
 {% load crispy_forms_tags %}
+{% load markdownify %}
 
 {% block title %}
 
@@ -19,7 +20,7 @@
                 <font color="#00BBDE">Dealine submission: {{ deadline }}</font>
             </div>
             <div class="chart-stage">
-                <p>{{ description|linebreaks }}</p>
+                <p>{{ description|markdownify|safe }}</p>
                 <form action="{% url 'gradapp:upload_assignment' assignment_id %}" method="post" enctype="multipart/form-data">
                        {% csrf_token %}
                        {{ form|crispy }}

@@ -2,6 +2,7 @@
 
 {% load staticfiles %}
 {% load crispy_forms_tags %}
+{% load markdownify %}
 
 {% block title %}
 
@@ -28,7 +29,7 @@ Assignment {{ assignmentype.title }}
                     </thead>
                     <tbody>
                        <tr>
-                         <td>{{ assignmentype.description|linebreaks }}</td>
+                         <td>{{ assignmentype.description|markdownify|safe }}</td>
                          <td>{{ assignmentype.nb_graders }}</td>
                          <td>{{ assignmentype.file_type }}</td>
                          <td>{{ assignmentype.deadline_submission }}</td>

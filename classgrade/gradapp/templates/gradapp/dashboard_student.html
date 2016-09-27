@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% load staticfiles %}
+{% load markdownify %}
 
 {% block title %}
 
@@ -23,7 +24,7 @@ Hi {{ student_name }}!
                         </div>
                         <div class="chart-stage">
                             <div class="col-lg-12">
-                                <p>{{ description|linebreaks }}<p>
+                                <p>{{ description|markdownify|safe }}<p>
                             </div>
                             <div class="col-lg-4">
                                 <p><center><b>Your submission</b> - Deadline: {{ deadline_submission }}</center></p>

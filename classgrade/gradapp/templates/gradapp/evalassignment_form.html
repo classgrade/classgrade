@@ -2,6 +2,7 @@
 
 {% load staticfiles %}
 {% load crispy_forms_tags %}
+{% load markdownify %}
 
 {% block title %}
 
@@ -21,8 +22,8 @@
             </div>
             <div class="chart-stage">
                 <div class="col-lg-4">
-                    <p>{{ description|linebreaks }}</p>
-                    <p><a class="btn btn-primary" href="{{ assignment_doc }}">Download the assignment</a></p>
+                    <p>{{ description|markdownify|safe }}</p>
+                    <p><a class="btn btn-info" href="{{ assignment_doc }}">Download the assignment</a></p>
                 </div>
                 <div class="col-lg-8">
                 <form action="{% url 'gradapp:eval_assignment' evalassignment_id %}" method="post" enctype="multipart/form-data">
@@ -30,6 +31,7 @@
                        {{ form|crispy }}
                        <p><input type="submit" value="Submit" /></p>
                 </form>
+                <p><a class="btn btn-primary" href="{% url 'gradapp:dashboard_student' %}">Cancel</a></p>
                 </div>
             </div> 
         </div>

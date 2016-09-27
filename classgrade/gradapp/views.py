@@ -48,6 +48,26 @@ def get_students(csv_file):
     return existing_students, new_students
 
 
+def is_evaluated(evalassignment):
+    """
+    Check state of evalassignment.
+    :param evalassignment: evalassignment instance
+    :type evalassignment: gradapp.models.Evalassignment
+    :rtype: -30 if document to be evaluated has not be uploaded,
+    -20 if uploaded, -10 if uploaded and evaluated
+    """
+    if evalassignment.assignment.document.name == '':
+        return -30
+    else:
+        if evalassignment.grade_assignment:
+            if evalassignment.grade_evaluation:
+                return evalassignment.grade_evaluation
+            else:
+                return -10
+        else:
+            return -20
+
+
 def index(request):
     context = {'main_info': 'oh yeah'}
     return render(request, 'gradapp/index.html', context)
@@ -67,16 +87,25 @@ def dashboard_student(request):
     assignments = student.assignment_set.all().\
         order_by('assignmentype__deadline_submission')
     for assignment in assignments:
+        # get assignments to be evaluated by the student
         to_be_evaluated = Evalassignment.objects.\
             filter(evaluator=student,
                    assignment__assignmentype=assignment.assignmentype)
-        to_be_evaluated = [(i, evalassignment.id) for i, evalassignment in
+        to_be_evaluated = [(i, is_evaluated(evalassignment),
+                            evalassignment.id) for i, evalassignment in
                            enumerate(to_be_evaluated)]
+        # get evaluations given to the student assignment
+        evaluations = [(e.id, e.grade_evaluation, e.grade_assignment,
+                        e.grade_assignment_comments)
+                       for e in assignment.evalassignment_set.all()]
+        print(evaluations)
         list_assignments.append([assignment.assignmentype.title,
                                  assignment.assignmentype.description,
                                  assignment.assignmentype.deadline_submission,
                                  assignment.assignmentype.deadline_grading,
-                                 assignment.id, to_be_evaluated])
+                                 assignment.id,
+                                 (assignment.document.name is ''),
+                                 to_be_evaluated, evaluations])
     context['list_assignments'] = list_assignments
     return render(request, 'gradapp/dashboard_student.html', context)
 
@@ -97,6 +126,7 @@ def upload_assignment(request, pk):
                                   instance=assignment)
             if form.is_valid():
                 form.save()
+                return redirect('gradapp:dashboard_student')
         else:
             form = AssignmentForm(instance=assignment)
         context = {'form': form, 'title': assignment.assignmentype.title,
@@ -123,18 +153,45 @@ def eval_assignment(request, pk):
         if request.method == 'POST':
             form = EvalassignmentForm(request.POST, instance=evalassignment)
             if form.is_valid():
-                form.save()
+                new_eval = form.save(commit=False)
+                # if evaluation is modified, evaluation grade is reset
+                new_eval.grade_evaluation = None
+                new_eval.save()
+                return redirect('gradapp:dashboard_student')
         else:
             form = EvalassignmentForm(instance=evalassignment)
         context = {'form': form,
                    'title': evalassignment.assignment.assignmentype.title,
-                   'assignment_file': evalassignment.assignment.document,
+                   'description': evalassignment.assignment.
+                   assignmentype.description,
+                   'assignment_doc': evalassignment.assignment.document.url,
                    'evalassignment_id': evalassignment.id,
                    'deadline': evalassignment.assignment.assignmentype.
                    deadline_grading}
         return render(request, 'gradapp/evalassignment_form.html', context)
     else:
         return redirect('gradapp:index')
+
+
+@login_required
+def eval_evalassignment(request, pk, pts):
+    """
+    Evaluate the assignment evaluation (Evalassignment(pk=pk)).
+    evalassignment.grade_evaluation = pts (-1, 0, +1)
+    """
+    try:
+        student = request.user.student
+    except ObjectDoesNotExist:
+        return redirect('gradapp:index')
+    evalassignment = Evalassignment.objects.\
+        filter(pk=pk, assignment__student=student).first()
+    if evalassignment:
+        evalassignment.grade_evaluation = pts
+        evalassignment.save()
+        redirect_item = '#assignment%s' % evalassignment.assignment.id
+    else:
+        redirect_item = ''
+    return redirect('/dashboard_student/' + redirect_item)
 
 
 @login_required

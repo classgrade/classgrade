@@ -16,8 +16,8 @@ Hi {{ student_name }}!
         <div class="chart-wrapper">
             <div class="chart-stage">
             
-                {% for title, description, deadline_submission, deadline_grading, id, to_be_evaluated in list_assignments %}    
-                    <div class="chart-wrapper">
+                {% for title, description, deadline_submission, deadline_grading, id, is_todo, to_be_evaluated, evaluations in list_assignments %}    
+                    <div class="chart-wrapper" id="assignment{{ id }}">
                         <div class="chart-title">
                             {{ title }}
                         </div>
@@ -26,16 +26,54 @@ Hi {{ student_name }}!
                                 <p>{{ description|linebreaks }}<p>
                             </div>
                             <div class="col-lg-4">
-                               <p> Deadline submission: {{ deadline_submission }}</p>
+                                <p><center><b>Your submission</b> - Deadline: {{ deadline_submission }}</center></p>
                                <p>
-                               <center><a class="btn btn-info" href="{% url 'gradapp:upload_assignment' id %}">Submit your assignment <span class="glyphicon glyphicon-upload"></span></a>
+                               {% if is_todo %}
+                                    <center><a class="btn btn-warning" href="{% url 'gradapp:upload_assignment' id %}">Submit your assignment <span class="glyphicon glyphicon-upload"></span></a>
+                               {% else %}
+                                    <center><a class="btn btn-info" href="{% url 'gradapp:upload_assignment' id %}">Resubmit your assignment <span class="glyphicon glyphicon-upload"></span></a>
+                                {% endif %}
                                </p>
                             </div>
-                            <div class="col-lg-8">
-                               <p> Deadline evaluation: {{ deadline_grading }}</p>
-                               {% for i, evalassignment_id in to_be_evaluated %}
-                               <a class="btn btn-primary" href="{% url 'gradapp:eval_assignment' evalassignment_id %}">Evaluation {{ i }} <span class="glyphicon glyphicon-eye-open"></span></a>
-                               {% endfor %}
+                            <div class="col-lg-4">
+                                <p><center><b>To be evaluated</b> - Deadline: {{ deadline_grading }}</center></p>
+                                <center>
+                                {% for i, is_evaluated, evalassignment_id in to_be_evaluated %}
+								   {% if is_evaluated == -30 %}
+                                        <a class="btn btn-primary" href="#"> <span class="glyphicon glyphicon-time"></span></a>
+                                   {% elif is_evaluated == -20 %}
+                                        <a class="btn btn-warning" href="{% url 'gradapp:eval_assignment' evalassignment_id %}"> <span class="glyphicon glyphicon-pencil"></span></a>
+                                   {% elif is_evaluated == -10 %}
+                                        <a class="btn btn-info" href="{% url 'gradapp:eval_assignment' evalassignment_id %}"> <span class="glyphicon glyphicon-eye-open"></span></a>
+                                   {% else %}
+                                        <a class="btn btn-info" href="{% url 'gradapp:eval_assignment' evalassignment_id %}"> <span class="glyphicon glyphicon-eye-open">&nbsp;</span><span class={% if is_evaluated == -1 %}"glyphicon glyphicon-thumbs-down"{% elif is_evaluated == 0 %}"glyphicon glyphicon-minus"{% elif is_evaluated == 1 %}"glyphicon glyphicon-thumbs-up"{% endif %}></span></a>
+                                   {% endif %}
+                                 {% endfor %}
+                                 </center>
+                            </div>
+                            <div class="col-lg-4">
+                                <p><center><b>See your evaluations</b></center></p>
+                                <center><p>
+                                {% for ieval, grade_evaluation, grade_assignment, comments in evaluations %}
+                                {% if grade_assignment %}
+									<div class="col-lg-4">
+                                    <button type="button" class="btn btn-danger" data-toggle="collapse" data-target="#comments{{ ieval }}">{{ grade_assignment }} / 10</button>
+                                    <div id="comments{{ ieval }}" class="collapse">
+                                      <p>{{ comments|linebreaks }}</p>
+									  <p>
+										<a class={% if grade_evaluation == -1 %}"btn btn-danger"{% else %}"btn btn-default"{% endif %} href="{% url 'gradapp:eval_evalassignment' ieval -1 %}"><span class="glyphicon glyphicon-thumbs-down"></span></a> 
+										<a class={% if grade_evaluation == 0 %}"btn btn-danger"{% else %}"btn btn-default"{% endif %} href="{% url 'gradapp:eval_evalassignment' ieval 0 %}"><span class="glyphicon glyphicon-minus"></span></a> 
+										<a class={% if grade_evaluation == 1 %}"btn btn-danger"{% else %}"btn btn-default"{% endif %} href="{% url 'gradapp:eval_evalassignment' ieval 1 %}"><span class="glyphicon glyphicon-thumbs-up"></span></a>
+									  </p>
+                                    </div>
+									</div>
+                                {% else %}
+									<div class="col-lg-4">
+                                     <a class="btn btn-primary" href="#"> <span class="glyphicon glyphicon-time"></span></a>
+									</div>
+                                 {% endif %}
+                                 {% endfor %}
+                                </p></center>
                             </div>
                         </div>
                     </div> 

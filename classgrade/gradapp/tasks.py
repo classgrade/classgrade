@@ -16,6 +16,9 @@ def create_evalassignment(assignmentype_title):
         for i, assignment in enumerate(assignments):
             for igrade in range(nb_grading):
                 to_be_evaluated = assignments[(i + 1 + igrade) % nb_assignments]
+                if to_be_evaluated.student == assignment.student:
+                    return 'Oups... too few students compare to the number'\
+                        'of assignment each student must evaluate'
                 Evalassignment.objects.create(assignment=to_be_evaluated,
                                               evaluator=assignment.student)
         return 'Evalassignments create for assignment %s' % assignmentype_title

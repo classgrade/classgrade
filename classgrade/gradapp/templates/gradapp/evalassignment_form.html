@@ -17,14 +17,20 @@
         {# TODO add download assignment #} 
         <div class="chart-wrapper">
             <div class="chart-title">
-                <font color="#00BBDE">Dealine evaluation: {{ deadline }}</font>
+                <font color="#FE6672">Dealine evaluation: {{ deadline }}</font>
             </div>
             <div class="chart-stage">
+                <div class="col-lg-4">
+                    <p>{{ description|linebreaks }}</p>
+                    <p><a class="btn btn-primary" href="{{ assignment_doc }}">Download the assignment</a></p>
+                </div>
+                <div class="col-lg-8">
                 <form action="{% url 'gradapp:eval_assignment' evalassignment_id %}" method="post" enctype="multipart/form-data">
                        {% csrf_token %}
                        {{ form|crispy }}
                        <p><input type="submit" value="Submit" /></p>
                 </form>
+                </div>
             </div> 
         </div>
     </div>

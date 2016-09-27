@@ -19,7 +19,7 @@
                 <font color="#00BBDE">Dealine submission: {{ deadline }}</font>
             </div>
             <div class="chart-stage">
-                <p>{{ description }}</p>
+                <p>{{ description|linebreaks }}</p>
                 <form action="{% url 'gradapp:upload_assignment' assignment_id %}" method="post" enctype="multipart/form-data">
                        {% csrf_token %}
                        {{ form|crispy }}

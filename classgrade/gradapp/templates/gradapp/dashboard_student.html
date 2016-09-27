@@ -54,7 +54,7 @@ Hi {{ student_name }}!
                             </div>
                             <div class="col-lg-4">
                                 <p><center><b>See your evaluations</b></center></p>
-                                <center><p>
+                                <p><center>
                                 {% for ieval, grade_evaluation, grade_assignment, comments in evaluations %}
                                 {% if grade_assignment %}
 									<div class="col-lg-4">
@@ -74,7 +74,7 @@ Hi {{ student_name }}!
 									</div>
                                  {% endif %}
                                  {% endfor %}
-                                </p></center>
+                                </center></p>
                             </div>
                         </div>
                     </div> 

@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from xkcdpass import xkcd_password as xp
 from gradapp.forms import AssignmentypeForm, AssignmentForm, EvalassignmentForm
+from gradapp.forms import LightAssignmentypeForm
 from gradapp.models import Assignment, Assignmentype, Student, Evalassignment
 from gradapp.tasks import create_evalassignment
 
@@ -196,16 +197,27 @@ def eval_evalassignment(request, pk, pts):
 
 @login_required
 def create_assignmentype(request, assignmentype_id=None):
+    """
+    Create an assignmentype or modify it (with new student list).
+    Caution: when modified with this function assignmentype.assignment_set.all()
+    are reset... Do not do it after students have already done something!
+    """
     try:
         prof = request.user.prof
     except ObjectDoesNotExist:
         return redirect('gradapp:index')
+    context = {}
     if assignmentype_id:
         assignmentype = Assignmentype.objects.get(id=assignmentype_id)
-        context = {'message': 'Update your assignment'}
+        message = 'Reset your assignment. You can upload a new student list, '\
+            'but be aware that it will reset the assignment (all former work '\
+            'will be lost!'
+        type_post = 'reset'  # reset the assignmentype
+        context['assignmentype_id'] = assignmentype.id
     else:
         assignmentype = None
-        context = {'message': 'Create a new assignment!'}
+        message = 'Create a new assignment!'
+        type_post = 'create'  # new assignmentype
     if request.method == 'POST':
         form = AssignmentypeForm(request.POST, request.FILES,
                                  instance=assignmentype)
@@ -231,14 +243,44 @@ def create_assignmentype(request, assignmentype_id=None):
                     logger.error(make_error_message(e))
                     new_assignmentype.list_students = None
                     new_assignmentype.save()
-                    # return details page of assignmentype
+                    # return update page of assignmentype
                     return redirect('/update_assignmentype/%s/' %
                                     new_assignmentype.pk)
     else:
         form = AssignmentypeForm(instance=assignmentype)
+    context['message'] = message
     context['form'] = form
-    context['assignmentype'] = assignmentype
+    context['type_post'] = type_post
     return render(request, 'gradapp/assignmentype_form.html', context)
+
+
+@login_required
+def modify_assignmentype(request, pk):
+    """
+    Modify assignmentype fields, except student list.
+    """
+    try:
+        prof = request.user.prof
+    except ObjectDoesNotExist:
+        return redirect('gradapp:index')
+    assignmentype = Assignmentype.objects.filter(id=pk, prof=prof).first()
+    if assignmentype:
+        if request.method == 'POST':
+            form = LightAssignmentypeForm(request.POST, instance=assignmentype)
+            if form.is_valid():
+                form.save()
+                return redirect('/detail_assignmentype/%s/' % assignmentype.pk)
+        else:
+            form = LightAssignmentypeForm(instance=assignmentype)
+            context = {}
+            context['assignmentype_id'] = assignmentype.id
+            context['message'] = 'Modify details of your assignment '\
+                '(keep current student list)'
+            context['form'] = form
+            context['type_post'] = 'modify'
+            return render(request, 'gradapp/assignmentype_form.html', context)
+    else:
+        return redirect('gradapp:index')
 
 
 @login_required
@@ -305,7 +347,7 @@ def validate_assignmentype_students(request):
 def create_assignmentype_students(request):
     """
     After validate_assignmentype_students, create new students and associate
-    new+existing students to the assignment
+    new+existing students to an assignmentype.assignment.
     """
     existing_students = request.session.get('existing_students', False)
     new_students = request.session.get('new_students', False)
@@ -315,6 +357,8 @@ def create_assignmentype_students(request):
         mywords = xp.generate_wordlist(wordfile=words, min_length=4,
                                        max_length=6)
         assignmentype = Assignmentype.objects.get(id=assignmentype_pk)
+        for assignment in assignmentype.assignment_set.all():
+            assignment.delete()
         for st in existing_students:
             student = Student.objects.get(user__username=st[0])
             Assignment.objects.get_or_create(student=student,

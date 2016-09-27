@@ -9,6 +9,13 @@ class AssignmentypeForm(ModelForm):
         exclude = ['prof', 'archived']
 
 
+class LightAssignmentypeForm(ModelForm):
+
+    class Meta:
+        model = Assignmentype
+        exclude = ['prof', 'archived', 'list_students']
+
+
 class AssignmentForm(ModelForm):
 
     class Meta:

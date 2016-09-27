@@ -38,7 +38,10 @@ Assignment {{ assignmentype.title }}
                     </tbody>
                 </table>
                 <p>
-                <center><a class="btn btn-info" href="{% url 'gradapp:update_assignmentype' assignmentype_id=assignmentype.id %}">Modify <span class="glyphicon glyphicon-pencil"></span></a></center>
+                <center>
+                    <a class="btn btn-info" href="{% url 'gradapp:modify_assignmentype' assignmentype.id %}">Modify details <span class="glyphicon glyphicon-pencil"></span></a>
+                    <a class="btn btn-warning" href="{% url 'gradapp:reset_assignmentype' assignmentype_id=assignmentype.id %}" onclick="return confirm('Are you sure you want to modify the student list of this assignment? If yes, all former work will be lost!');">Modify student list <span class="glyphicon glyphicon-pencil"></span></a>
+                </center>
                 </p>
             </div> <!-- chart-stage -->
         </div> <!-- chart-wrapper -->

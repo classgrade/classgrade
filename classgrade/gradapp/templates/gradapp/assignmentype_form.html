@@ -19,10 +19,12 @@ Assignment
                 <font color="#00BBDE">{{ message }}</font>
             </div>
             <div class="chart-stage">
-                {% if assignmentype %}
-                   <form action="{% url 'gradapp:update_assignmentype' assignmentype.id %}" method="post" enctype="multipart/form-data">
-                {% else %}
+                {% if type_post == 'reset' %}
+                   <form action="{% url 'gradapp:reset_assignmentype' assignmentype_id %}" method="post" enctype="multipart/form-data">
+                {% elif type_post == 'create' %}
                    <form action="{% url 'gradapp:create_assignmentype' %}" method="post" enctype="multipart/form-data">
+                {% elif type_post == 'modify' %}
+                   <form action="{% url 'gradapp:modify_assignmentype' assignmentype_id %}" method="post" enctype="multipart/form-data">
                 {% endif %}
                        {% csrf_token %}
                        {{ form|crispy }}

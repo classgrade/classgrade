@@ -71,8 +71,14 @@ def is_evaluated(evalassignment):
 
 
 def index(request):
-    context = {'main_info': 'oh yeah'}
-    return render(request, 'gradapp/index.html', context)
+    if request.user.is_authenticated:
+        try:
+            request.user.prof
+            return redirect('gradapp:list_assignmentypes_running')
+        except ObjectDoesNotExist:
+            return redirect('gradapp:dashboard_student')
+    else:
+        return redirect('accounts:login')
 
 
 @login_required

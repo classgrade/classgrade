@@ -3,6 +3,12 @@
 {% load staticfiles %}
 {% load crispy_forms_tags %}
 
+{% block head %}
+ <script type="text/javascript" src="/static/gradapp/lib/jquery/dist/jquery.min.js"></script>
+<script type="text/javascript" src="/static/gradapp/lib/bootstrap/dist/js/bootstrap.js"></script>
+{{ form.media }}
+{% endblock head %}
+
 {% block title %}
 
 Assignment
@@ -19,6 +25,7 @@ Assignment
                 <font color="#00BBDE">{{ message }}</font>
             </div>
             <div class="chart-stage">
+                <div class="col-lg-4">
                 {% if type_post == 'reset' %}
                    <form action="{% url 'gradapp:reset_assignmentype' assignmentype_id %}" method="post" enctype="multipart/form-data">
                 {% elif type_post == 'create' %}
@@ -33,10 +40,9 @@ Assignment
                        {% endif %}
                        <p><input type="submit" value="Submit" /></p>
                 </form>
+                </div>
             </div> 
         </div>
     </div>
 </div>
 {% endblock content %}
-{% block scripts %}
-{% endblock scripts %}

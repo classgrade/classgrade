@@ -101,7 +101,7 @@ class Evalassignment(models.Model):
     grade_assignment = models.FloatField(null=True, blank=True, help_text='/10',
                                          validators=[MaxValueValidator(10),
                                                      MinValueValidator(0)])
-    grade_assignment_comments = models.TextField(max_length=300, default='',
+    grade_assignment_comments = models.TextField(max_length=3000, default='',
                                                  blank=True)
     grade_evaluation = models.IntegerField(null=True, blank=True,
                                            validators=[MaxValueValidator(-1),

@@ -29,7 +29,7 @@
                 <form action="{% url 'gradapp:eval_assignment' evalassignment_id %}" method="post" enctype="multipart/form-data">
                        {% csrf_token %}
                        {{ form|crispy }}
-                       <p><input type="submit" value="Submit" /></p>
+                       <p><input type="submit" value="Submit"></p>
                 </form>
                 <p><a class="btn btn-primary" href="{% url 'gradapp:dashboard_student' %}">Cancel</a></p>
                 </div>

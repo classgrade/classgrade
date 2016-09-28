@@ -39,13 +39,71 @@ Assignment {{ assignmentype.title }}
                 </table>
                 <p>
                 <center>
-                    <a class="btn btn-info" href="{% url 'gradapp:modify_assignmentype' assignmentype.id %}">Modify details <span class="glyphicon glyphicon-pencil"></span></a>
-                    <a class="btn btn-warning" href="{% url 'gradapp:reset_assignmentype' assignmentype_id=assignmentype.id %}" onclick="return confirm('Are you sure you want to modify the student list of this assignment? If yes, all former work will be lost!');">Modify student list <span class="glyphicon glyphicon-pencil"></span></a>
+                    <a class="btn btn-info" href="{% url 'gradapp:modify_assignmentype' assignmentype.id %}">Modify details (not the student list) <span class="glyphicon glyphicon-pencil"></span></a>
+                    <a class="btn btn-warning" href="{% url 'gradapp:reset_assignmentype' assignmentype_id=assignmentype.id %}" onclick="return confirm('Are you sure you want to modify the student list of this assignment? If yes, all former work will be lost!');">Modify student list (all student work will be lost!) <span class="glyphicon glyphicon-pencil"></span></a>
                 </center>
                 </p>
             </div> <!-- chart-stage -->
         </div> <!-- chart-wrapper -->
     </div> <!-- col-lg-12 -->
 </div> <!-- row -->
+
+<div class="row">
+	<div class="col-lg-12">
+        <div class="chart-wrapper">
+            <div class="chart-stage">
+                <table class="table table-striped">
+                    <thead>
+                      <tr>
+                        <th>Student</th>
+                        <th>Assignment</th>
+                        <th>Upload date</th>
+                        {% for grade in range_grades %}
+                            <th><a href="#" data-toggle="tooltip" data-placement="top" title="Left: grade given to the assignment. Right: student agreement with the peer-evaluation."><font color="#000000">Peer-grade {{ grade }}</font></a></th>
+                        {% endfor %}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for assignment in assignmentype.assignment_set.all %}
+                        <tr>
+                          <td>{{ assignment.student.user.username }}</td>
+                          {% if assignment.document.name == '' %}
+                            <td>Not uploaded yet...</td>
+                          {% else %}
+                            <td><a href="{{ assignment.document.url }}">{{ assignment.document.name }}</a></td>
+                          {% endif %}
+                          <td>{{ assignment.date_upload }}</td>
+                          {% for evaluation in assignment.evalassignment_set.all %}
+                             <td>
+								 {{ evaluation.evaluator.user.username }}<br>
+                                 {% if evaluation.grade_assignment %}
+                                    <button type="button" class="btn btn-default" data-toggle="collapse" data-target="#comments{{ evaluation.id }}">{{ evaluation.grade_assignment }}</button>
+									<div id="comments{{ evaluation.id }}" class="collapse">{{ evaluation.grade_assignment_comments }}</div>
+                                 {% else %}
+                                    <button type="button" class="btn btn-default"><span class="glyphicon glyphicon-time"></span></button>
+                                 {% endif %}
+                                 {% if evaluation.grade_evaluation %}
+                                     <button type="button" class="btn btn-default">
+                                         <span class={% if evaluation.grade_evaluation == -1 %}"glyphicon glyphicon-thumbs-down"{% elif evaluation.grade_evaluation == 0 %}"glyphicon glyphicon-minus"{% elif evaluation.grade_evaluation == 1 %}"glyphicon glyphicon-thumbs-up"{% endif %}></span>
+                                     </button>
+                                 {% else %}
+                                     <button type="button" class="btn btn-default"><span class="glyphicon glyphicon-time"></span></button>
+                                 {% endif %}
+
+                          {% endfor %}
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                </table>
+            </div> <!-- chart-stage -->
+        </div> <!-- chart-wrapper -->
+    </div> <!-- col-lg-12 -->
+</div> <!-- row -->
+                        
 {% endblock content %}
+{% block script %}
+$(document).ready(function(){
+    $('[data-toggle="tooltip"]').tooltip();
+});
+{% endblock script %}
 

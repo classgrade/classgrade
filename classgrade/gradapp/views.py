@@ -421,5 +421,8 @@ def detail_assignmentype(request, pk):
     assignmentype = Assignmentype.objects.filter(pk=pk, prof=prof).first()
     if assignmentype:
         context['assignmentype'] = assignmentype
+        context['range_grades'] = range(assignmentype.nb_grading)
         return render(request, 'gradapp/detail_assignmentype.html',
                       context)
+    else:
+        return redirect('gradapp:index')

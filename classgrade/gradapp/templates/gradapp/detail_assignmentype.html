@@ -78,17 +78,37 @@ Assignment {{ assignmentype.title }}
                              <td>
 								 {{ evaluation.evaluator.user.username }}<br>
                                  {% if evaluation.grade_assignment %}
-                                    <button type="button" class="btn btn-default" data-toggle="collapse" data-target="#comments{{ evaluation.id }}">{{ evaluation.grade_assignment }}</button>
-									<div id="comments{{ evaluation.id }}" class="collapse">{{ evaluation.grade_assignment_comments }}</div>
+                                 <button type="button" class={% if not evaluation.grade_evaluation %}"btn btn-info"{% elif evaluation.grade_evaluation == -1 %}"btn btn-warning"{% elif evaluation.grade_evaluation == -1 %}"btn btn-warning"{% else %}"btn btn-primary"{% endif %} data-toggle="modal" data-target="#comments{{ evaluation.id }}">{{ evaluation.grade_assignment }}</button>
+                                      <!-- Modal -->
+                                      <div class="modal fade" id="comments{{ evaluation.id }}" role="dialog">
+                                        <div class="modal-dialog">
+                                          <!-- Modal content-->
+                                          <div class="modal-content">
+                                            <div class="modal-header">
+                                              <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                              <h4 class="modal-title">Evaluation comments &nbsp; &nbsp; &nbsp; &nbsp; {{ evaluation.grade_assignment }}  &nbsp; &nbsp; {% if evaluation.grade_evaluation == -1 %}<span class="glyphicon glyphicon-thumbs-down" aria-hidden="true"></span>{% elif evaluation.grade_evaluation == 0 %}<span class="glyphicon glyphicon-minus" aria-hidden="true"></span>{% elif evaluation.grade_evaluation == 1 %}<span class="glyphicon glyphicon-thumbs-up" aria-hidden="true"></span>{% endif %}</h4>
+                                            </div>
+                                            <div class="modal-body">
+                                              <p>{{ evaluation.grade_assignment_comments|markdownify|safe }}</p>
+                                            </div>
+                                            <div class="modal-footer">
+                                              <a class="btn btn-primary" href="{% url 'gradapp:generate_txt_comments' evaluation.id %}">Get comments in a txt file <span class="glyphicon glyphicon-download"></span></a><button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                            </div>
+                                          </div>
+                                          
+                                        </div>
+                                      </div>
                                  {% else %}
                                     <button type="button" class="btn btn-default"><span class="glyphicon glyphicon-time"></span></button>
                                  {% endif %}
-                                 {% if evaluation.grade_evaluation %}
-                                     <button type="button" class="btn btn-default">
-                                         <span class={% if evaluation.grade_evaluation == -1 %}"glyphicon glyphicon-thumbs-down"{% elif evaluation.grade_evaluation == 0 %}"glyphicon glyphicon-minus"{% elif evaluation.grade_evaluation == 1 %}"glyphicon glyphicon-thumbs-up"{% endif %}></span>
-                                     </button>
-                                 {% else %}
+                                 {% if not evaluation.grade_evaluation %}
                                      <button type="button" class="btn btn-default"><span class="glyphicon glyphicon-time"></span></button>
+                                 {% elif evaluation.grade_evaluation == -1 %}
+                                     <button type="button" class="btn btn-warning"><span class="glyphicon glyphicon-thumbs-down"></span></button>
+                                 {% elif evaluation.grade_evaluation == 0 %}
+                                     <button type="button" class="btn btn-primary"><span class="glyphicon glyphicon-minus"></span></button>
+                                 {% elif evaluation.grade_evaluation == 1 %}
+                                     <button type="button" class="btn btn-primary"><span class="glyphicon glyphicon-thumbs-up"></span></button>
                                  {% endif %}
 
                           {% endfor %}

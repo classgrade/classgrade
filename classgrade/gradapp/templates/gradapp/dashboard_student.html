@@ -45,9 +45,9 @@ Hi {{ student_name }}!
                                    {% elif is_evaluated == -20 %}
                                         <a class="btn btn-warning" href="{% url 'gradapp:eval_assignment' evalassignment_id %}"> <span class="glyphicon glyphicon-pencil"></span></a>
                                    {% elif is_evaluated == -10 %}
-                                        <a class="btn btn-info" href="{% url 'gradapp:eval_assignment' evalassignment_id %}"> <span class="glyphicon glyphicon-eye-open"></span></a>
+                                        <a class="btn btn-info" href="{% url 'gradapp:eval_assignment' evalassignment_id %}"> <span class="glyphicon glyphicon-ok"></span></a>
                                    {% else %}
-                                        <a class="btn btn-info" href="{% url 'gradapp:eval_assignment' evalassignment_id %}"> <span class="glyphicon glyphicon-eye-open">&nbsp;</span><span class={% if is_evaluated == -1 %}"glyphicon glyphicon-thumbs-down"{% elif is_evaluated == 0 %}"glyphicon glyphicon-minus"{% elif is_evaluated == 1 %}"glyphicon glyphicon-thumbs-up"{% endif %}></span></a>
+                                        <a class="btn btn-info" href="{% url 'gradapp:eval_assignment' evalassignment_id %}"> <span class="glyphicon glyphicon-ok">&nbsp;</span><span class={% if is_evaluated == -1 %}"glyphicon glyphicon-thumbs-down"{% elif is_evaluated == 0 %}"glyphicon glyphicon-minus"{% elif is_evaluated == 1 %}"glyphicon glyphicon-thumbs-up"{% endif %}></span></a>
                                    {% endif %}
                                  {% endfor %}
                                  </center>
@@ -58,15 +58,31 @@ Hi {{ student_name }}!
                                 {% for ieval, grade_evaluation, grade_assignment, comments in evaluations %}
                                 {% if grade_assignment %}
 									<div class="col-lg-4">
-                                    <button type="button" class="btn btn-danger" data-toggle="collapse" data-target="#comments{{ ieval }}">{{ grade_assignment }} / 10</button>
-                                    <div id="comments{{ ieval }}" class="collapse">
-                                      <p>{{ comments|linebreaks }}</p>
-									  <p>
-										<a class={% if grade_evaluation == -1 %}"btn btn-danger"{% else %}"btn btn-default"{% endif %} href="{% url 'gradapp:eval_evalassignment' ieval -1 %}"><span class="glyphicon glyphicon-thumbs-down"></span></a> 
-										<a class={% if grade_evaluation == 0 %}"btn btn-danger"{% else %}"btn btn-default"{% endif %} href="{% url 'gradapp:eval_evalassignment' ieval 0 %}"><span class="glyphicon glyphicon-minus"></span></a> 
-										<a class={% if grade_evaluation == 1 %}"btn btn-danger"{% else %}"btn btn-default"{% endif %} href="{% url 'gradapp:eval_evalassignment' ieval 1 %}"><span class="glyphicon glyphicon-thumbs-up"></span></a>
-									  </p>
-                                    </div>
+                                    <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#comments{{ ieval }}">{{ grade_assignment }} / 10</button>
+                                    <!-- Modal -->
+                                      <div class="modal fade" id="comments{{ ieval }}" role="dialog">
+                                        <div class="modal-dialog">
+                                          <!-- Modal content-->
+                                          <div class="modal-content">
+                                            <div class="modal-header">
+                                              <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                              <h4 class="modal-title">Evaluation comments &nbsp; &nbsp; &nbsp; &nbsp; {{ evaluation.grade_assignment }}  &nbsp; &nbsp;
+										           <a class={% if grade_evaluation == -1 %}"btn btn-danger"{% else %}"btn btn-default"{% endif %} href="{% url 'gradapp:eval_evalassignment' ieval -1 %}"><span class="glyphicon glyphicon-thumbs-down"></span></a> 
+										           <a class={% if grade_evaluation == 0 %}"btn btn-danger"{% else %}"btn btn-default"{% endif %} href="{% url 'gradapp:eval_evalassignment' ieval 0 %}"><span class="glyphicon glyphicon-minus"></span></a> 
+										           <a class={% if grade_evaluation == 1 %}"btn btn-danger"{% else %}"btn btn-default"{% endif %} href="{% url 'gradapp:eval_evalassignment' ieval 1 %}"><span class="glyphicon glyphicon-thumbs-up"></span></a>
+                                              </h4>
+                                            </div>
+                                            <div class="modal-body">
+                                              <p>{{ comments|markdownify|safe }}</p>
+                                            </div>
+                                            <div class="modal-footer">
+                                              <a class="btn btn-primary" href="{% url 'gradapp:generate_txt_comments' ieval %}">Get comments in a txt file <span class="glyphicon glyphicon-download"></span></a><button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+
+
 									</div>
                                 {% else %}
 									<div class="col-lg-4">

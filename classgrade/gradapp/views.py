@@ -9,7 +9,7 @@ from xkcdpass import xkcd_password as xp
 from gradapp.forms import AssignmentypeForm, AssignmentForm, EvalassignmentForm
 from gradapp.forms import LightAssignmentypeForm
 from gradapp.models import Assignment, Assignmentype, Student, Evalassignment
-from gradapp.tasks import create_evalassignment
+from gradapp import tasks
 
 logger = logging.getLogger(__name__)
 
@@ -362,6 +362,7 @@ def create_assignmentype_students(request):
             assignment.delete()
         for st in existing_students:
             student = Student.objects.get(user__username=st[0])
+            # Get an existing assignment or create it
             Assignment.objects.get_or_create(student=student,
                                              assignmentype=assignmentype)
 
@@ -369,10 +370,12 @@ def create_assignmentype_students(request):
             password = xp.generate_xkcdpassword(mywords, numwords=4)
             u = User.objects.create_user(st[0], st[1], password)
             student = Student.objects.create(user=u)
-            # TODO Send email
+            # Send email
+            tasks.email_new_student(u.email, u.username, password)
+            # Create the assignment
             Assignment.objects.create(student=student,
                                       assignmentype=assignmentype)
-        log = create_evalassignment(assignmentype.title)
+        log = tasks.create_evalassignment(assignmentype.title)
         logger.info(log)
         return redirect('/detail_assignmentype/%s/' % assignmentype_pk)
     else:
@@ -437,10 +440,9 @@ def generate_csv_grades(request, pk):
         return redirect('gradapp:index')
     assignmentype = Assignmentype.objects.filter(pk=pk, prof=prof).first()
     response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="somefilename.csv"'
+    response['Content-Disposition'] = 'attachment; filename="grades.csv"'
     writer = csv.writer(response)
     if assignmentype:
-        # Create the HttpResponse object with the appropriate CSV header.
         for assignment in assignmentype.assignment_set.all():
             list_as = [assignment.student.user.username]
             for evaluation in assignment.evalassignment_set.all():
@@ -451,4 +453,23 @@ def generate_csv_grades(request, pk):
     else:
         writer.writerow(['Oups... you might not be a prof or this assignment '
                          'might not exist'])
+    return response
+
+
+@login_required
+def generate_txt_comments(request, pk):
+    try:
+        request.user.prof
+        evalassignment = Evalassignment.objects.filter(pk=pk).first()
+    except ObjectDoesNotExist:
+        student = request.user.student
+        evalassignment = Evalassignment.objects.\
+            filter(pk=pk, assignment__student=student).first()
+    response = HttpResponse(content_type='text/txt')
+    response['Content-Disposition'] = 'attachment; filename="comments.txt"'
+    writer = csv.writer(response)
+    if evalassignment:
+        writer.writerow([evalassignment.grade_assignment_comments])
+    else:
+        writer.writerow(['Oups... you might not be allowed to see this'])
     return response

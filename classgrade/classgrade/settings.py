@@ -161,3 +161,6 @@ MARKDOWNIFY_WHITELIST_TAGS = [
     'strong',
     'ul'
 ]
+
+# URL site
+SITE_URL = 'http://127.0.0.1:8000/'

@@ -10,6 +10,8 @@ urlpatterns = [
         name='list_assignmentypes_archived'),
     url(r'^detail_assignmentype/(?P<pk>[0-9]+)/$',
         views.detail_assignmentype, name='detail_assignmentype'),
+    url(r'^csv_grades/(?P<pk>[0-9]+)/$', views.generate_csv_grades,
+        name='generate_csv_grades'),
     url(r'^create_assignmentype/$', views.create_assignmentype,
         name='create_assignmentype'),
     url(r'^archive_assignmentype/(?P<pk>[0-9]+)/$',

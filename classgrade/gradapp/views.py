@@ -1,5 +1,6 @@
 import logging
 import csv
+from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
@@ -426,3 +427,28 @@ def detail_assignmentype(request, pk):
                       context)
     else:
         return redirect('gradapp:index')
+
+
+@login_required
+def generate_csv_grades(request, pk):
+    try:
+        prof = request.user.prof
+    except ObjectDoesNotExist:
+        return redirect('gradapp:index')
+    assignmentype = Assignmentype.objects.filter(pk=pk, prof=prof).first()
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="somefilename.csv"'
+    writer = csv.writer(response)
+    if assignmentype:
+        # Create the HttpResponse object with the appropriate CSV header.
+        for assignment in assignmentype.assignment_set.all():
+            list_as = [assignment.student.user.username]
+            for evaluation in assignment.evalassignment_set.all():
+                list_as.extend([evaluation.evaluator.user.username,
+                                evaluation.grade_assignment,
+                                evaluation.grade_evaluation])
+            writer.writerow(list_as)
+    else:
+        writer.writerow(['Oups... you might not be a prof or this assignment '
+                         'might not exist'])
+    return response

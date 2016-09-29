@@ -11,6 +11,8 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
+working_env = os.environ.get('DR_WORKING_ENV', 'PROD')
+
 if working_env == 'DEV':
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "datarun.settings")
 

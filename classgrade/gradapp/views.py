@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from xkcdpass import xkcd_password as xp
+from unidecode import unidecode
 from gradapp.forms import AssignmentypeForm, AssignmentForm, EvalassignmentForm
 from gradapp.forms import LightAssignmentypeForm
 from gradapp.models import Assignment, Assignmentype, Student, Evalassignment
@@ -37,7 +38,7 @@ def get_students(csv_file):
         existing_students = []
         new_students = []
         for i, row in enumerate(reader):
-            row = [x.strip() for x in row[:3]]
+            row = [unidecode(x.strip()) for x in row[:3]]
             username = "_".join(row[:2])
             username = username.replace(" ", "_")
             email = row[2]

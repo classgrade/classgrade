@@ -1,5 +1,5 @@
 # coding=utf-8
-import logging
+# import logging
 import csv
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
@@ -13,7 +13,7 @@ from gradapp.forms import LightAssignmentypeForm
 from gradapp.models import Assignment, Assignmentype, Student, Evalassignment
 from gradapp import tasks
 
-logger = logging.getLogger(__name__)
+# logger = logging.getLogger(__name__)
 
 
 def make_error_message(e):
@@ -108,7 +108,6 @@ def dashboard_student(request):
         evaluations = [(e.id, e.grade_evaluation, e.grade_assignment,
                         e.grade_assignment_comments)
                        for e in assignment.evalassignment_set.all()]
-        print(evaluations)
         list_assignments.append([assignment.assignmentype.title,
                                  assignment.assignmentype.description,
                                  assignment.assignmentype.deadline_submission,
@@ -220,7 +219,7 @@ def create_assignmentype(request, assignmentype_id=None):
         assignmentype = Assignmentype.objects.get(id=assignmentype_id)
         message = 'Reset your assignment. You can upload a new student list, '\
             'but be aware that it will reset the assignment (all former work '\
-            'will be lost!'
+            'will be lost!)'
         type_post = 'reset'  # reset the assignmentype
         context['assignmentype_id'] = assignmentype.id
     else:
@@ -249,11 +248,11 @@ def create_assignmentype(request, assignmentype_id=None):
                     request.session['assignmentype_pk'] = new_assignmentype.pk
                     return redirect("gradapp:validate_assignmentype_students")
                 except Exception as e:
-                    logger.error(make_error_message(e))
+                    # logger.error(make_error_message(e))
                     new_assignmentype.list_students = None
                     new_assignmentype.save()
                     # return update page of assignmentype
-                    return redirect('/update_assignmentype/%s/' %
+                    return redirect('/reset_assignmentype/%s/' %
                                     new_assignmentype.pk)
     else:
         form = AssignmentypeForm(instance=assignmentype)
@@ -386,7 +385,7 @@ def create_assignmentype_students(request):
         # The line below could be in a new function to separate shuffling from
         # assignment
         log = tasks.create_evalassignment(assignmentype.title)
-        logger.info(log)
+        # logger.info(log)
         return redirect('/detail_assignmentype/%s/' % assignmentype_pk)
     else:
         # TODO return error message

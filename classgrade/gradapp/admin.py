@@ -1,3 +1,4 @@
 from django.contrib import admin
+from gradapp.models import Prof
 
-# Register your models here.
+admin.site.register(Prof)

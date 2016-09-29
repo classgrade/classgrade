@@ -14,11 +14,11 @@ from django.core.wsgi import get_wsgi_application
 working_env = os.environ.get('DR_WORKING_ENV', 'PROD')
 
 if working_env == 'DEV':
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "datarun.settings")
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "classgrade.settings")
 
     application = get_wsgi_application()
 else:
-    os.environ["DJANGO_SETTINGS_MODULE"] = "datarun.settings"
+    os.environ["DJANGO_SETTINGS_MODULE"] = "classgrade.settings"
 
     env_variables_to_pass = ['CG_DATABASE_NAME', 'CG_DATABASE_USER',
                              'CG_DATABASE_PASSWORD', 'CG_EMAIL_PASSWORD']

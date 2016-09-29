@@ -1,3 +1,4 @@
+# coding=utf-8
 from random import shuffle
 from django.core.mail import send_mail
 from classgrade import settings

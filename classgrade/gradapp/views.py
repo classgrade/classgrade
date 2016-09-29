@@ -1,3 +1,4 @@
+# coding=utf-8
 import logging
 import csv
 from django.http import HttpResponse

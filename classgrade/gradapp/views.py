@@ -381,6 +381,8 @@ def create_assignmentype_students(request):
             # Create the assignment
             Assignment.objects.create(student=student,
                                       assignmentype=assignmentype)
+        # The line below could be in a new function to separate shuffling from
+        # assignment
         log = tasks.create_evalassignment(assignmentype.title)
         logger.info(log)
         return redirect('/detail_assignmentype/%s/' % assignmentype_pk)

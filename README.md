@@ -8,4 +8,5 @@ By default, the db is a postgres database. You can change it (for development pu
 - `CG_DATABASE_NAME`: database name  
 - `CG_DATABASE_USER`: database user  
 - `CG_DATABASE_PASSWORD`: database password  
-- `CG_EMAIL_PASSWORD`: password of the email account 
+- `CG_EMAIL_PASSWORD`: password of the email account  
+- `CG_WORKING_ENV`: working environment, can be set to `DEV` or `PROD`

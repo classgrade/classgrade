@@ -58,7 +58,7 @@ Hi {{ student_name }}!
                                 {% for ieval, grade_evaluation, grade_assignment, comments in evaluations %}
                                 {% if grade_assignment %}
 									<div class="col-lg-4">
-                                    <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#comments{{ ieval }}">{{ grade_assignment }} / 10</button>
+                                    <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#comments{{ ieval }}">{{ grade_assignment }} / 20</button>
                                     <!-- Modal -->
                                       <div class="modal fade" id="comments{{ ieval }}" role="dialog">
                                         <div class="modal-dialog">

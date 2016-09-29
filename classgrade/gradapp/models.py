@@ -98,8 +98,8 @@ class Evalassignment(models.Model):
     """
     assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE)
     evaluator = models.ForeignKey(Student, on_delete=models.CASCADE)
-    grade_assignment = models.FloatField(null=True, blank=True, help_text='/10',
-                                         validators=[MaxValueValidator(10),
+    grade_assignment = models.FloatField(null=True, blank=True, help_text='/20',
+                                         validators=[MaxValueValidator(20),
                                                      MinValueValidator(0)])
     grade_assignment_comments = models.TextField(max_length=3000, default='',
                                                  blank=True)

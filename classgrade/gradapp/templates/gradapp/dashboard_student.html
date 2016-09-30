@@ -66,7 +66,7 @@ Hi {{ student_name }}!
                                           <div class="modal-content">
                                             <div class="modal-header">
                                               <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                              <h4 class="modal-title">Evaluation comments &nbsp; &nbsp; &nbsp; &nbsp; {{ evaluation.grade_assignment }}  &nbsp; &nbsp;
+                                              <h4 class="modal-title">Evaluation comments &nbsp; &nbsp; &nbsp; &nbsp; {{ grade_assignment }}  &nbsp; &nbsp;
 										           <a class={% if grade_evaluation == -1 %}"btn btn-danger"{% else %}"btn btn-default"{% endif %} href="{% url 'gradapp:eval_evalassignment' ieval -1 %}" data-toggle="tooltip" data-placement="top" title="I disagree with this evaluation"><span class="glyphicon glyphicon-thumbs-down"></span></a> 
 										           <a class={% if grade_evaluation == 0 %}"btn btn-danger"{% else %}"btn btn-default"{% endif %} href="{% url 'gradapp:eval_evalassignment' ieval 0 %}" data-toggle="tooltip" data-placement="top" title="I don't know what to think about this evaluation"><span class="glyphicon glyphicon-minus"></span></a> 
 										           <a class={% if grade_evaluation == 1 %}"btn btn-danger"{% else %}"btn btn-default"{% endif %} href="{% url 'gradapp:eval_evalassignment' ieval 1 %}"data-toggle="tooltip" data-placement="top" title="I agree with this evaluation"><span class="glyphicon glyphicon-thumbs-up"></span></a>

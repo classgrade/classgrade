@@ -176,7 +176,7 @@ LOGGING = {
     'handlers': {
         'file': {
             'class': 'logging.FileHandler',
-            'filename': '/path/to/django/classgrade_debug.log',
+            'filename': './classgrade_debug.log',
         },
     },
     'loggers': {

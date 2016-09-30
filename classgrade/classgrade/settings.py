@@ -167,3 +167,23 @@ MARKDOWNIFY_WHITELIST_TAGS = [
 
 # URL site
 SITE_URL = 'http://127.0.0.1:8000/'
+
+
+# Logger
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': '/path/to/django/classgrade_debug.log',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}

@@ -1,5 +1,5 @@
 # coding=utf-8
-# import logging
+import logging
 import csv
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
@@ -13,7 +13,7 @@ from gradapp.forms import LightAssignmentypeForm
 from gradapp.models import Assignment, Assignmentype, Student, Evalassignment
 from gradapp import tasks
 
-# logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def make_error_message(e):
@@ -248,7 +248,7 @@ def create_assignmentype(request, assignmentype_id=None):
                     request.session['assignmentype_pk'] = new_assignmentype.pk
                     return redirect("gradapp:validate_assignmentype_students")
                 except Exception as e:
-                    # logger.error(make_error_message(e))
+                    logger.error(make_error_message(e))
                     new_assignmentype.list_students = None
                     new_assignmentype.save()
                     # return update page of assignmentype
@@ -385,7 +385,7 @@ def create_assignmentype_students(request):
         # The line below could be in a new function to separate shuffling from
         # assignment
         log = tasks.create_evalassignment(assignmentype.title)
-        # logger.info(log)
+        logger.info(log)
         return redirect('/detail_assignmentype/%s/' % assignmentype_pk)
     else:
         # TODO return error message

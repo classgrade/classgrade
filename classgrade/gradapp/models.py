@@ -3,6 +3,13 @@ from django.contrib.auth.models import User
 from django.core.validators import MaxValueValidator, MinValueValidator
 
 
+def assignment_directory_path(instance, filename):
+    """Used in FileField option upload_to, to upload the file to
+    MEDIA_ROOT/assignment_<assignmentype_id>/<filename>
+    """
+    return 'assignment_{0}/{1}'.format(instance.assignmentype.id, filename)
+
+
 class Prof(models.Model):
     """
     :param user: associated django user
@@ -76,7 +83,8 @@ class Assignment(models.Model):
     """
     assignmentype = models.ForeignKey(Assignmentype, on_delete=models.CASCADE)
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
-    document = models.FileField(max_length=100, null=True, blank=True)
+    document = models.FileField(max_length=100, null=True, blank=True,
+                                upload_to=assignment_directory_path)
     date_upload = models.DateTimeField(auto_now=True)
 
     def __str__(self):

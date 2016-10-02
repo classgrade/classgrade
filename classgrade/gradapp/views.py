@@ -1,5 +1,6 @@
 # coding=utf-8
 import logging
+import os
 import csv
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
@@ -9,6 +10,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
 from xkcdpass import xkcd_password as xp
 from unidecode import unidecode
+from classgrade import settings
 from gradapp.forms import AssignmentypeForm, AssignmentForm, EvalassignmentForm
 from gradapp.forms import LightAssignmentypeForm
 from gradapp.models import Assignment, Assignmentype, Student, Evalassignment
@@ -250,6 +252,13 @@ def create_assignmentype(request, assignmentype_id=None):
                 new_assignmentype = form.save(commit=False)
                 new_assignmentype.prof = prof
                 new_assignmentype.save()
+                # create folder where to upload assignments
+                try:
+                    os.mkdir(os.path.join(settings.BASE_DIR,
+                                          settings.MEDIA_ROOT, 'assignment_%s' %
+                                          new_assignmentype.id))
+                except FileExistsError:
+                    pass
                 # get list students from csv file
                 try:
                     existing_students, new_students =\

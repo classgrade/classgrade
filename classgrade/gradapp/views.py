@@ -6,6 +6,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
+from django.utils import timezone
 from xkcdpass import xkcd_password as xp
 from unidecode import unidecode
 from gradapp.forms import AssignmentypeForm, AssignmentForm, EvalassignmentForm
@@ -57,10 +58,12 @@ def is_evaluated(evalassignment):
     Check state of evalassignment.
     :param evalassignment: evalassignment instance
     :type evalassignment: gradapp.models.Evalassignment
-    :rtype: -30 if document to be evaluated has not be uploaded,
+    :rtype: -30 if document to be evaluated has not be uploaded or
+    if it is before the submission deadline,
     -20 if uploaded, -10 if uploaded and evaluated
     """
-    if evalassignment.assignment.document.name == '':
+    if evalassignment.assignment.document.name == '' or evalassignment.\
+            assignment.assignmentype.deadline_submission > timezone.now():
         return -30
     else:
         if evalassignment.grade_assignment:
@@ -105,9 +108,13 @@ def dashboard_student(request):
                             evalassignment.id) for i, evalassignment in
                            enumerate(to_be_evaluated)]
         # get evaluations given to the student assignment
-        evaluations = [(e.id, e.grade_evaluation, e.grade_assignment,
-                        e.grade_assignment_comments)
-                       for e in assignment.evalassignment_set.all()]
+        if assignment.assignmentype.deadline_grading < timezone.now():
+            evaluations = [(e.id, e.grade_evaluation, e.grade_assignment,
+                            e.grade_assignment_comments)
+                           for e in assignment.evalassignment_set.all()]
+        else:
+            evaluations = [(None, None, None, None)] * assignment.\
+                assignmentype.nb_grading
         list_assignments.append([assignment.assignmentype.title,
                                  assignment.assignmentype.description,
                                  assignment.assignmentype.deadline_submission,
@@ -158,7 +165,8 @@ def eval_assignment(request, pk):
         return redirect('gradapp:index')
     evalassignment = Evalassignment.objects.filter(pk=pk, evaluator=student).\
         first()
-    if evalassignment:
+    if evalassignment and evalassignment.assignment.assignmentype.\
+            deadline_submission < timezone.now():
         if request.method == 'POST':
             form = EvalassignmentForm(request.POST, instance=evalassignment)
             if form.is_valid():
@@ -179,7 +187,11 @@ def eval_assignment(request, pk):
                    deadline_grading}
         return render(request, 'gradapp/evalassignment_form.html', context)
     else:
-        return redirect('gradapp:index')
+        if evalassignment:
+            redirect_item = '#assignment%s' % evalassignment.assignment.id
+        else:
+            redirect_item = ''
+        return redirect('/dashboard_student/' + redirect_item)
 
 
 @login_required

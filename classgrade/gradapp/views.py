@@ -103,6 +103,17 @@ def dashboard_student(request):
     assignments = student.assignment_set.all().\
         order_by('assignmentype__deadline_submission')
     for assignment in assignments:
+        # check if too late to submit or if assignment has already been uploaded
+        if assignment.document.name is '' and\
+                assignment.assignmentype.deadline_submission >= timezone.now():
+            todo = 0  # submit
+        elif assignment.assignmentype.deadline_submission < timezone.now():
+            if assignment.document.name is '':
+                todo = -2  # too late
+            else:
+                todo = -1  # too late, but see your file
+        else:
+            todo = 1  # resubmit
         # get assignments to be evaluated by the student
         to_be_evaluated = Evalassignment.objects.\
             filter(evaluator=student,
@@ -122,8 +133,7 @@ def dashboard_student(request):
                                  assignment.assignmentype.description,
                                  assignment.assignmentype.deadline_submission,
                                  assignment.assignmentype.deadline_grading,
-                                 assignment.id,
-                                 (assignment.document.name is ''),
+                                 assignment.id, todo,
                                  to_be_evaluated, evaluations])
     context['list_assignments'] = list_assignments
     return render(request, 'gradapp/dashboard_student.html', context)
@@ -170,7 +180,9 @@ def eval_assignment(request, pk):
         first()
     if evalassignment and evalassignment.assignment.assignmentype.\
             deadline_submission < timezone.now():
-        if request.method == 'POST':
+        error = ''
+        if request.method == 'POST' and evalassignment.assignment.\
+                assignmentype.deadline_grading >= timezone.now():
             form = EvalassignmentForm(request.POST, instance=evalassignment)
             if form.is_valid():
                 new_eval = form.save(commit=False)
@@ -180,6 +192,9 @@ def eval_assignment(request, pk):
                 return redirect('gradapp:dashboard_student')
         else:
             form = EvalassignmentForm(instance=evalassignment)
+            if evalassignment.assignment.assignmentype.\
+                    deadline_grading < timezone.now():
+                error = 'Too late to grade or to modify your grading...'
         context = {'form': form,
                    'title': evalassignment.assignment.assignmentype.title,
                    'description': evalassignment.assignment.
@@ -187,7 +202,8 @@ def eval_assignment(request, pk):
                    'assignment_doc': evalassignment.assignment.document.url,
                    'evalassignment_id': evalassignment.id,
                    'deadline': evalassignment.assignment.assignmentype.
-                   deadline_grading}
+                   deadline_grading,
+                   'error': error}
         return render(request, 'gradapp/evalassignment_form.html', context)
     else:
         if evalassignment:
@@ -534,3 +550,25 @@ def generate_zip_assignments(request, pk):
     response['Content-Disposition'] = 'attachment; filename=%s.zip' % dir_name
 
     return response
+
+
+@login_required
+def get_assignment(request, pk):
+    try:
+        student = request.user.student
+    except ObjectDoesNotExist:
+        return redirect('gradapp:index')
+    assignment = Assignment.objects.filter(student=student, pk=pk).first()
+    if assignment:
+        try:
+            fsock = open(assignment.document.path, "rb")
+            response = HttpResponse(fsock,
+                                    content_type="application/force_download")
+            response['Content-Disposition'] = 'attachment; filename=%s' %\
+                assignment.document.name.split('/')[-1]
+            return response
+        except ValueError:
+            return redirect('/dashboard_student/#assignment%s' %
+                            assignment.id)
+    else:
+        return redirect('gradapp:dashboard_student')

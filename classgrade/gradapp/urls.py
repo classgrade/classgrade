@@ -36,6 +36,8 @@ urlpatterns = [
         name='dashboard_student'),
     url(r'^upload_assignment/(?P<pk>[0-9]+)/$', views.upload_assignment,
         name='upload_assignment'),
+    url(r'^get_assignment/(?P<pk>[0-9]+)/$', views.get_assignment,
+        name='get_assignment'),
     url(r'^eval_assignment/(?P<pk>[0-9]+)/$', views.eval_assignment,
         name='eval_assignment'),
     url(r'^eval_evalassignment/(?P<pk>[0-9]+)/(?P<pts>-?[0-1]+)$',

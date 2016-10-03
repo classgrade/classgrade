@@ -17,7 +17,7 @@ Hi {{ student_name }}!
         <div class="chart-wrapper">
             <div class="chart-stage">
             
-                {% for title, description, deadline_submission, deadline_grading, id, is_todo, to_be_evaluated, evaluations in list_assignments %}    
+                {% for title, description, deadline_submission, deadline_grading, id, todo, to_be_evaluated, evaluations in list_assignments %}    
                     <div class="chart-wrapper" id="assignment{{ id }}">
                         <div class="chart-title">
                             {{ title }}
@@ -30,10 +30,14 @@ Hi {{ student_name }}!
                                 <p><center><b>Your submission</b> - Deadline: {{ deadline_submission }}</center></p>
                                 <p><center><font color='#FE6672'>Do not write your name in the file and in the file name</font></center></p>
                                 <p>
-                               {% if is_todo %}
+                               {% if todo == 0 %}
                                     <center><a class="btn btn-warning" href="{% url 'gradapp:upload_assignment' id %}">Submit your assignment <span class="glyphicon glyphicon-upload"></span></a>
-                               {% else %}
+                               {% elif todo == 1 %}
                                     <center><a class="btn btn-info" href="{% url 'gradapp:upload_assignment' id %}">Resubmit your assignment <span class="glyphicon glyphicon-upload"></span></a>
+                               {% elif todo == -1 %}
+                               <center><a class="btn btn-primary" href="{% url 'gradapp:get_assignment' id %}">Too late to resubmit, click to download your file <span class="glyphicon glyphicon-download"></span></a>
+                               {% else %}
+                               <center><a class="btn btn-primary" href="#">Too late to submit <span class="glyphicon glyphicon-time"></span></a>
                                 {% endif %}
                                </p>
                             </div>

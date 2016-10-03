@@ -21,6 +21,7 @@
             </div>
             <div class="chart-stage">
                 <p>{{ description|markdownify|safe }}</p>
+                <p><font color="#FE6672">Do not write your name in the file and in the file name</font></p>
                 <form action="{% url 'gradapp:upload_assignment' assignment_id %}" method="post" enctype="multipart/form-data">
                        {% csrf_token %}
                        {{ form|crispy }}

@@ -28,7 +28,8 @@ Hi {{ student_name }}!
                             </div>
                             <div class="col-lg-4">
                                 <p><center><b>Your submission</b> - Deadline: {{ deadline_submission }}</center></p>
-                               <p>
+                                <p><center><font color='#FE6672'>Do not write your name in the file and in the file name</font></center></p>
+                                <p>
                                {% if is_todo %}
                                     <center><a class="btn btn-warning" href="{% url 'gradapp:upload_assignment' id %}">Submit your assignment <span class="glyphicon glyphicon-upload"></span></a>
                                {% else %}

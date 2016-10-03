@@ -2,6 +2,7 @@
 import logging
 import os
 import csv
+import zipfile
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
@@ -502,4 +503,34 @@ def generate_txt_comments(request, pk):
         writer.writerow([evalassignment.grade_assignment_comments])
     else:
         writer.writerow(['Oups... you might not be allowed to see this'])
+    return response
+
+
+@login_required
+def generate_zip_assignments(request, pk):
+    try:
+        prof = request.user.prof
+    except ObjectDoesNotExist:
+        return redirect('gradapp:index')
+    assignmentype = Assignmentype.objects.filter(pk=pk, prof=prof).first()
+    dir_name = 'assignment_%s' % assignmentype.id
+    file_path = os.path.join(settings.BASE_DIR, settings.MEDIA_ROOT,
+                             dir_name)
+    zip_name = '{0}.zip'.format(file_path)
+    zipf = zipfile.ZipFile(zip_name, 'w', zipfile.ZIP_DEFLATED)
+    for root, dirs, files in os.walk(file_path):
+        for filename in files:
+            assignment = Assignment.objects.\
+                filter(document='{0}/{1}'.format(dir_name, filename)).first()
+            new_filename = '{0}_{1}.{2}'.format(dir_name, assignment.student.
+                                                user.username,
+                                                filename.split('.')[-1])
+            zipf.write(os.path.abspath(os.path.join(root, filename)),
+                       arcname=new_filename)
+    zipf.close()
+    fsock = open(zip_name, "rb")
+    response = HttpResponse(fsock,
+                            content_type="application/force_download")
+    response['Content-Disposition'] = 'attachment; filename=%s.zip' % dir_name
+
     return response

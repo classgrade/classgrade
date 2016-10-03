@@ -7,7 +7,9 @@ def assignment_directory_path(instance, filename):
     """Used in FileField option upload_to, to upload the file to
     MEDIA_ROOT/assignment_<assignmentype_id>/<filename>
     """
-    return 'assignment_{0}/{1}'.format(instance.assignmentype.id, filename)
+    new_filename = 'assignment_1024{0}42.{1}'.format(instance.id,
+                                                     filename.split('.')[-1])
+    return 'assignment_{0}/{1}'.format(instance.assignmentype.id, new_filename)
 
 
 class Prof(models.Model):

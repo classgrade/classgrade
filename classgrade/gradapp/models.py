@@ -121,6 +121,7 @@ class Evalassignment(models.Model):
     :param grade_evaluation: grade given to the evaluator
     :param grade_assignment_comments: general comments given by the evaluator
     :param grade_evaluation_comments: comments given to the evaluator
+    :param is_questions_graded: 1 if all associated evalquestion.grade are set
 
     :type assignment: ForeignKey(Assignment, on_delete=models.CASCADE)
     :type evaluator: ForeignKey(Student, on_delete=models.CASCADE)
@@ -128,6 +129,7 @@ class Evalassignment(models.Model):
     :type grade_evaluation: IntegerField(null=True, blank=True, min=-1, max=1)
     :type grade_assignment_comments: TextField(max_length=500, default='')
     :type grade_evaluation_comments: TextField(max_length=300, default='')
+    :type is_questions_graded: BooleanField(default=False)
     """
     assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE)
     evaluator = models.ForeignKey(Student, on_delete=models.CASCADE)
@@ -141,6 +143,8 @@ class Evalassignment(models.Model):
                                                        MinValueValidator(-1)])
     grade_evaluation_comments = models.TextField(max_length=300, default='',
                                                  blank=True)
+
+    is_questions_graded = models.BooleanField(default=False)
 
     def __str__(self):
         return 'Evalassignment(id {}, assignment {},  evaluator {})'.\

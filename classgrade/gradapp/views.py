@@ -1,6 +1,7 @@
 # coding=utf-8
 import logging
 import os
+from functools import wraps
 import csv
 import zipfile
 from django.http import HttpResponse
@@ -9,6 +10,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
+from django.utils.decorators import available_attrs
 from xkcdpass import xkcd_password as xp
 from unidecode import unidecode
 from classgrade import settings
@@ -18,6 +20,38 @@ from gradapp.models import Assignment, Assignmentype, Student, Evalassignment
 from gradapp import tasks
 
 logger = logging.getLogger(__name__)
+
+
+def login_prof(func):
+    """
+    Decorator which checks the user is a prof before executing a view
+    Redirect to the index page if not
+    """
+    @wraps(func, assigned=available_attrs(func))
+    def wrapper(request, *args, **kwargs):
+        try:
+            request.user.prof
+        except ObjectDoesNotExist:
+            return redirect('gradapp:dashboard_student')
+        res = func(request, *args, **kwargs)
+        return res
+    return wrapper
+
+
+def login_student(func):
+    """
+    Decorator which checks the user is a student before executing a view
+    Redirect to the index page if not
+    """
+    @wraps(func, assigned=available_attrs(func))
+    def wrapper(request, *args, **kwargs):
+        try:
+            request.user.student
+        except ObjectDoesNotExist:
+            return redirect('gradapp:list_assignmentypes_running')
+        res = func(request, *args, **kwargs)
+        return res
+    return wrapper
 
 
 def make_error_message(e):
@@ -90,14 +124,12 @@ def index(request):
 
 
 @login_required
+@login_student
 def dashboard_student(request):
     """
     Student dashboard: list all due assignments (to do and to evaluate)
     """
-    try:
-        student = request.user.student
-    except ObjectDoesNotExist:
-        return redirect('gradapp:index')
+    student = request.user.student
     context = {'student_name': student.user.username}
     list_assignments = []
     assignments = student.assignment_set.all().\
@@ -140,14 +172,12 @@ def dashboard_student(request):
 
 
 @login_required
+@login_student
 def upload_assignment(request, pk):
     """
     Upload assignment
     """
-    try:
-        student = request.user.student
-    except ObjectDoesNotExist:
-        return redirect('gradapp:index')
+    student = request.user.student
     assignment = Assignment.objects.filter(pk=pk, student=student).first()
     if assignment:
         if request.method == 'POST':
@@ -168,14 +198,12 @@ def upload_assignment(request, pk):
 
 
 @login_required
+@login_student
 def eval_assignment(request, pk):
     """
     Evaluate the assignment (Evalassignment(pk=pk))
     """
-    try:
-        student = request.user.student
-    except ObjectDoesNotExist:
-        return redirect('gradapp:index')
+    student = request.user.student
     evalassignment = Evalassignment.objects.filter(pk=pk, evaluator=student).\
         first()
     if evalassignment and evalassignment.assignment.assignmentype.\
@@ -214,15 +242,13 @@ def eval_assignment(request, pk):
 
 
 @login_required
+@login_student
 def eval_evalassignment(request, pk, pts):
     """
     Evaluate the assignment evaluation (Evalassignment(pk=pk)).
     evalassignment.grade_evaluation = pts (-1, 0, +1)
     """
-    try:
-        student = request.user.student
-    except ObjectDoesNotExist:
-        return redirect('gradapp:index')
+    student = request.user.student
     evalassignment = Evalassignment.objects.\
         filter(pk=pk, assignment__student=student).first()
     if evalassignment:
@@ -235,16 +261,14 @@ def eval_evalassignment(request, pk, pts):
 
 
 @login_required
+@login_prof
 def create_assignmentype(request, assignmentype_id=None):
     """
     Create an assignmentype or modify it (with new student list).
     Caution: when modified with this function assignmentype.assignment_set.all()
     are reset... Do not do it after students have already done something!
     """
-    try:
-        prof = request.user.prof
-    except ObjectDoesNotExist:
-        return redirect('gradapp:index')
+    prof = request.user.prof
     context = {}
     if assignmentype_id:
         assignmentype = Assignmentype.objects.get(id=assignmentype_id)
@@ -301,14 +325,12 @@ def create_assignmentype(request, assignmentype_id=None):
 
 
 @login_required
+@login_prof
 def modify_assignmentype(request, pk):
     """
     Modify assignmentype fields, except student list.
     """
-    try:
-        prof = request.user.prof
-    except ObjectDoesNotExist:
-        return redirect('gradapp:index')
+    prof = request.user.prof
     assignmentype = Assignmentype.objects.filter(id=pk, prof=prof).first()
     if assignmentype:
         if request.method == 'POST':
@@ -330,16 +352,14 @@ def modify_assignmentype(request, pk):
 
 
 @login_required
+@login_prof
 def delete_assignmentype(request, pk, type_list):
     """
     Delete assignmentype with id=pk and redirect to list of running
     assignmentype if type_list=='1', and to list of archived assignmentype
     if type_list=='0'
     """
-    try:
-        prof = request.user.prof
-    except ObjectDoesNotExist:
-        return redirect('gradapp:index')
+    prof = request.user.prof
     assignmentype = Assignmentype.objects.filter(id=pk, prof=prof).first()
     if assignmentype:
         assignmentype.delete()
@@ -352,15 +372,13 @@ def delete_assignmentype(request, pk, type_list):
 
 
 @login_required
+@login_prof
 def archive_assignmentype(request, pk):
     """
     Update assignmentype with id=pk and redirect to list of running
     assignmentype
     """
-    try:
-        prof = request.user.prof
-    except ObjectDoesNotExist:
-        return redirect('gradapp:index')
+    prof = request.user.prof
     assignmentype = Assignmentype.objects.filter(id=pk, prof=prof).first()
     if assignmentype:
         assignmentype.archived = True
@@ -431,14 +449,12 @@ def create_assignmentype_students(request):
 
 
 @login_required
+@login_prof
 def list_assignmentypes_running(request):
     """
     List all running (archived=False) assignmentype
     """
-    try:
-        prof = request.user.prof
-    except ObjectDoesNotExist:
-        return redirect('gradapp:index')
+    prof = request.user.prof
     context = {'type_assignmentype': 'running', 'prof': prof}
     context['list_assignmentypes'] = Assignmentype.objects.\
         filter(archived=False, prof=prof).order_by('deadline_submission')
@@ -447,14 +463,12 @@ def list_assignmentypes_running(request):
 
 
 @login_required
+@login_prof
 def list_assignmentypes_archived(request):
     """
     List all archived assignmentype
     """
-    try:
-        prof = request.user.prof
-    except ObjectDoesNotExist:
-        return redirect('gradapp:index')
+    prof = request.user.prof
     context = {'type_assignmentype': 'archived', 'prof': prof}
     context['list_assignmentypes'] = Assignmentype.objects.\
         filter(archived=True, prof=prof)
@@ -463,11 +477,9 @@ def list_assignmentypes_archived(request):
 
 
 @login_required
+@login_prof
 def detail_assignmentype(request, pk):
-    try:
-        prof = request.user.prof
-    except ObjectDoesNotExist:
-        return redirect('gradapp:index')
+    prof = request.user.prof
     context = {'prof': prof}
     assignmentype = Assignmentype.objects.filter(pk=pk, prof=prof).first()
     if assignmentype:
@@ -480,11 +492,9 @@ def detail_assignmentype(request, pk):
 
 
 @login_required
+@login_prof
 def generate_csv_grades(request, pk):
-    try:
-        prof = request.user.prof
-    except ObjectDoesNotExist:
-        return redirect('gradapp:index')
+    prof = request.user.prof
     assignmentype = Assignmentype.objects.filter(pk=pk, prof=prof).first()
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="grades.csv"'
@@ -523,11 +533,9 @@ def generate_txt_comments(request, pk):
 
 
 @login_required
+@login_prof
 def generate_zip_assignments(request, pk):
-    try:
-        prof = request.user.prof
-    except ObjectDoesNotExist:
-        return redirect('gradapp:index')
+    prof = request.user.prof
     assignmentype = Assignmentype.objects.filter(pk=pk, prof=prof).first()
     dir_name = 'assignment_%s' % assignmentype.id
     file_path = os.path.join(settings.BASE_DIR, settings.MEDIA_ROOT,
@@ -553,11 +561,9 @@ def generate_zip_assignments(request, pk):
 
 
 @login_required
+@login_student
 def get_assignment(request, pk):
-    try:
-        student = request.user.student
-    except ObjectDoesNotExist:
-        return redirect('gradapp:index')
+    student = request.user.student
     assignment = Assignment.objects.filter(student=student, pk=pk).first()
     if assignment:
         try:

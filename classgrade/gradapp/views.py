@@ -4,6 +4,7 @@ import os
 from functools import wraps
 import csv
 import zipfile
+import django.forms as forms
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
@@ -11,12 +12,14 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
 from django.utils.decorators import available_attrs
+from django.forms import modelformset_factory
 from xkcdpass import xkcd_password as xp
 from unidecode import unidecode
 from classgrade import settings
-from gradapp.forms import AssignmentypeForm, AssignmentForm, EvalassignmentForm
+from gradapp.forms import AssignmentypeForm, AssignmentForm
 from gradapp.forms import LightAssignmentypeForm
 from gradapp.models import Assignment, Assignmentype, Student, Evalassignment
+from gradapp.models import Evalquestion
 from gradapp import tasks
 
 logger = logging.getLogger(__name__)
@@ -103,13 +106,14 @@ def is_evaluated(evalassignment):
             assignment.assignmentype.deadline_submission > timezone.now():
         return -30
     else:
-        if evalassignment.grade_assignment:
+        list_grade = [qq.grade for qq in evalassignment.evalquestion_set.all()]
+        if None in list_grade:
+            return -20
+        else:
             if evalassignment.grade_evaluation:
                 return evalassignment.grade_evaluation
             else:
                 return -10
-        else:
-            return -20
 
 
 def index(request):
@@ -155,11 +159,15 @@ def dashboard_student(request):
                            enumerate(to_be_evaluated)]
         # get evaluations given to the student assignment
         if assignment.assignmentype.deadline_grading < timezone.now():
-            evaluations = [(e.id, e.grade_evaluation, e.grade_assignment,
-                            e.grade_assignment_comments)
+            evaluations = [(e.id,
+                            (None not in [q.grade
+                                          for q in e.evalquestion_set.all()]),
+                            e.grade_evaluation, e.grade_assignment,
+                            [(qq.question, qq.grade, qq.comments)
+                             for qq in e.evalquestion_set.all()])
                            for e in assignment.evalassignment_set.all()]
         else:
-            evaluations = [(None, None, None, None)] * assignment.\
+            evaluations = [(None, None, None, None, None)] * assignment.\
                 assignmentype.nb_grading
         list_assignments.append([assignment.assignmentype.title,
                                  assignment.assignmentype.description,
@@ -208,22 +216,34 @@ def eval_assignment(request, pk):
         first()
     if evalassignment and evalassignment.assignment.assignmentype.\
             deadline_submission < timezone.now():
+        # if evalassignment exists and if it is after the submission deadline
         error = ''
+        EvalquestionFormSet =\
+            modelformset_factory(Evalquestion, extra=0,
+                                 fields=['grade', 'comments'],
+                                 widgets={'grade':
+                                          forms.NumberInput(attrs={'min': 0,
+                                                                   'max': 2}),
+                                          'comments':
+                                          forms.Textarea(attrs={'cols': 80,
+                                                                'rows': 10})})
+        qs = Evalquestion.objects.filter(evalassignment__id=pk).\
+            order_by('question')
         if request.method == 'POST' and evalassignment.assignment.\
                 assignmentype.deadline_grading >= timezone.now():
-            form = EvalassignmentForm(request.POST, instance=evalassignment)
-            if form.is_valid():
-                new_eval = form.save(commit=False)
+            formset = EvalquestionFormSet(request.POST, queryset=qs)
+            if formset.is_valid():
+                formset.save()
                 # if evaluation is modified, evaluation grade is reset
-                new_eval.grade_evaluation = None
-                new_eval.save()
-                return redirect('gradapp:dashboard_student')
+                evalassignment.grade_evaluation = None
+                return redirect('/dashboard_student/#assignment%s' %
+                                evalassignment.assignment.id)
         else:
-            form = EvalassignmentForm(instance=evalassignment)
+            formset = EvalquestionFormSet(queryset=qs)
             if evalassignment.assignment.assignmentype.\
                     deadline_grading < timezone.now():
                 error = 'Too late to grade or to modify your grading...'
-        context = {'form': form,
+        context = {'formset': formset,
                    'title': evalassignment.assignment.assignmentype.title,
                    'description': evalassignment.assignment.
                    assignmentype.description,
@@ -234,6 +254,7 @@ def eval_assignment(request, pk):
                    'error': error}
         return render(request, 'gradapp/evalassignment_form.html', context)
     else:
+        # if evalassignment does not exist or before submission deadline
         if evalassignment:
             redirect_item = '#assignment%s' % evalassignment.assignment.id
         else:
@@ -438,8 +459,8 @@ def create_assignmentype_students(request):
             # Create the assignment
             Assignment.objects.create(student=student,
                                       assignmentype=assignmentype)
-        # The line below could be in a new function to separate shuffling from
-        # assignment
+        # Create associated Evalassignment
+        # This could be in a new function to separate shuffling from assignment
         log = tasks.create_evalassignment(assignmentype.title)
         logger.info(log)
         return redirect('/detail_assignmentype/%s/' % assignmentype_pk)
@@ -526,7 +547,14 @@ def generate_txt_comments(request, pk):
     response['Content-Disposition'] = 'attachment; filename="comments.txt"'
     writer = csv.writer(response)
     if evalassignment:
-        writer.writerow([evalassignment.grade_assignment_comments])
+        # writer.writerow([evalassignment.grade_assignment_comments])
+        for evalquestion in evalassignment.evalquestion_set.all():
+            writer.writerow(['****************************************'])
+            writer.writerow(['****************************************'])
+            writer.writerow(['Question %s' % evalquestion.question,
+                             ' Grade %s' % evalquestion.grade])
+            writer.writerow(['****************************************'])
+            writer.writerow([evalquestion.comments])
     else:
         writer.writerow(['Oups... you might not be allowed to see this'])
     return response

@@ -2,7 +2,7 @@
 from random import shuffle
 from django.core.mail import send_mail
 from classgrade import settings
-from gradapp.models import Assignmentype, Evalassignment
+from gradapp.models import Assignmentype, Evalassignment, Evalquestion
 
 
 def create_evalassignment(assignmentype_title):
@@ -13,6 +13,7 @@ def create_evalassignment(assignmentype_title):
         assignmentype = Assignmentype.objects.\
             filter(title=assignmentype_title).first()
         nb_grading = assignmentype.nb_grading
+        nb_questions = assignmentype.nb_questions
         assignments = [a for a in assignmentype.assignment_set.all()]
         shuffle(assignments)
         nb_assignments = len(assignments)
@@ -22,8 +23,11 @@ def create_evalassignment(assignmentype_title):
                 if to_be_evaluated.student == assignment.student:
                     return 'Oups... too few students compare to the number'\
                         'of assignment each student must evaluate'
-                Evalassignment.objects.create(assignment=to_be_evaluated,
-                                              evaluator=assignment.student)
+                e = Evalassignment.objects.create(assignment=to_be_evaluated,
+                                                  evaluator=assignment.student)
+                for iq in range(nb_questions):
+                    Evalquestion.objects.create(evalassignment=e,
+                                                question=(iq + 1))
         return 'Evalassignments create for assignment %s' % assignmentype_title
     except Exception as e:
         return 'Oups... ' + str(e)

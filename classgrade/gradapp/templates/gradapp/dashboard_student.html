@@ -59,10 +59,10 @@ Hi {{ student_name }}!
                             <div class="col-lg-4">
                                 <p><center><b>See your evaluations</b></center></p>
                                 <p><center>
-                                {% for ieval, grade_evaluation, grade_assignment, comments in evaluations %}
-                                {% if grade_assignment %}
+                                {% for ieval, graded, grade_evaluation, grade_assignment, comments in evaluations %}
+                                {% if graded %}
 									<div class="col-lg-4">
-                                    <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#comments{{ ieval }}">{{ grade_assignment }} / 20</button>
+                                        <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#comments{{ ieval }}"><span class="glyphicon glyphicon-eye-open"></span></button>
                                     <!-- Modal -->
                                       <div class="modal fade" id="comments{{ ieval }}" role="dialog">
                                         <div class="modal-dialog">
@@ -77,7 +77,10 @@ Hi {{ student_name }}!
                                               </h4>
                                             </div>
                                             <div class="modal-body">
-                                              <p>{{ comments|markdownify|safe }}</p>
+                                                <p>{% for question, question_grade, question_comments in comments %}
+                                                <b>Question {{ question }}: {{ question_grade }}/2</b><br>
+                                                 {{ question_comments|markdownify|safe }}
+                                                {% endfor %}</p>
                                             </div>
                                             <div class="modal-footer">
                                               <a class="btn btn-primary" href="{% url 'gradapp:generate_txt_comments' ieval %}">Get comments in a txt file <span class="glyphicon glyphicon-download"></span></a><button type="button" class="btn btn-default" data-dismiss="modal">Close</button>

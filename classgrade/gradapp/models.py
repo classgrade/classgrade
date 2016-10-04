@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MaxValueValidator, MinValueValidator
+import django.contrib.postgres.fields as pgfields
 
 
 def assignment_directory_path(instance, filename):
@@ -42,17 +43,29 @@ class Student(models.Model):
 
 class Assignmentype(models.Model):
     """
-    :param description: assigment description
+    :param title: assignment title
+    :param description: assignment description
     :param nb_graders: number of graders
+    :param nb_questions: number of questions in assignment
+    :param questions_coeff: coefficient of each question
     :param file_type: file type that can be submitted (e.g. ipynb)
     :param deadline_submission: submission deadline
     :param deadline_grading: grading deadline
+    :param prof: prof creating the assignment
+    :param list_students: csv with student list (first_name, last_name, email)
+    :param archived: if assignment is running or archived
 
+    :type title: CharField(max_length=100)
     :type description: TextField(max_length=500)
-    :type nb_graders: TextField(max_length=500)
-    :type file_type: TextField(max_length=500)
+    :type nb_graders: IntegerField(default=3)
+    :type nb_questions: IntegerField(default=1)
+    :type questions_coeff: pgfields.ArrayField(models.FloatField(default=1))
+    :type file_type: CharField(max_length=20)
     :type deadline_submission: TextField(max_length=500)
     :type deadline_grading: TextField(max_length=500)
+    :type prof: ForeignKey(Prof)
+    :type list_students: FileField(max_length=100, null=True, blank=True)
+    :type archived: BooleanField(default=False)
     """
     title = models.CharField(max_length=100, default='')
     description = models.TextField(max_length=500)
@@ -61,9 +74,11 @@ class Assignmentype(models.Model):
     deadline_submission = models.DateTimeField(help_text='DD/MM/YY')
     deadline_grading = models.DateTimeField(help_text='DD/MM/YY')
     nb_questions = models.IntegerField(default=1)
+    questions_coeff = pgfields.ArrayField(models.FloatField(default=1),
+                                          default=list)
     prof = models.ForeignKey(Prof)
     list_students = models.FileField(max_length=100, null=True, blank=True,
-                                     help_text='csv file, each row contains'
+                                     help_text='csv file, each row contains: '
                                                'first_name, last_name, email')
     archived = models.BooleanField(default=False)
 
@@ -99,20 +114,24 @@ class Evalassignment(models.Model):
     """
     :param assignment: evaluated assignment
     :param student: student evaluating the assignment
-    :grade_assignment: grade given by the evaluator
-    :grade_evaluation: grade given to the evaluator
+    :param grade_assignment: combination of grades given by the evaluator
+    :param grade_evaluation: grade given to the evaluator
+    :param grade_assignment_comments: general comments given by the evaluator
+    :param grade_evaluation_comments: comments given to the evaluator
 
     :type assignment: ForeignKey(Assignment, on_delete=models.CASCADE)
     :type evaluator: ForeignKey(Student, on_delete=models.CASCADE)
-    :type grade_assignment: FloatField(null=True, blank=True)
-    :type grade_evaluation: FloatField(null=True, blank=True)
+    :type grade_assignment: FloatField(null=True, blank=True, min=0, max=20)
+    :type grade_evaluation: IntegerField(null=True, blank=True, min=-1, max=1)
+    :type grade_assignment_comments: TextField(max_length=500, default='')
+    :type grade_evaluation_comments: TextField(max_length=300, default='')
     """
     assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE)
     evaluator = models.ForeignKey(Student, on_delete=models.CASCADE)
     grade_assignment = models.FloatField(null=True, blank=True, help_text='/20',
                                          validators=[MaxValueValidator(20),
                                                      MinValueValidator(0)])
-    grade_assignment_comments = models.TextField(max_length=3000, default='',
+    grade_assignment_comments = models.TextField(max_length=500, default='',
                                                  blank=True)
     grade_evaluation = models.IntegerField(null=True, blank=True,
                                            validators=[MaxValueValidator(1),
@@ -126,6 +145,17 @@ class Evalassignment(models.Model):
 
 
 class Evalquestion(models.Model):
+    """
+    :param evalassignment: related evaluation
+    :param question: related question
+    :param grade: grade for the question
+    :param comments: comments for the question
+
+    :type evalassignment: ForeignKey(Evalassignment, on_delete=models.CASCADE)
+    :type question: IntegerField
+    :type grade: IntegerField(null=True, blank=True, min=0, max=2)
+    :type comments: TextField(max_length=500, default='', blank=True)
+    """
     evalassignment = models.ForeignKey(Evalassignment, on_delete=models.CASCADE)
     question = models.IntegerField()
     grade = models.IntegerField(null=True, blank=True,

@@ -68,12 +68,15 @@ class Assignmentype(models.Model):
     :type archived: BooleanField(default=False)
     """
     title = models.CharField(max_length=100, default='')
-    description = models.TextField(max_length=500)
-    nb_grading = models.IntegerField(default=3)
+    description = models.TextField(max_length=500,
+                                   help_text='Use Markdown')
+    nb_grading = models.IntegerField(default=3, help_text='nb of files '
+                                     'evaluated by each student')
     file_type = models.CharField(max_length=20, default='ipynb')
     deadline_submission = models.DateTimeField(help_text='DD/MM/YY')
     deadline_grading = models.DateTimeField(help_text='DD/MM/YY')
-    nb_questions = models.IntegerField(default=1)
+    nb_questions = models.IntegerField(default=1, help_text='nb of questions '
+                                       'in your assignment')
     questions_coeff = pgfields.ArrayField(models.FloatField(default=1),
                                           default=list)
     prof = models.ForeignKey(Prof)
@@ -161,7 +164,8 @@ class Evalquestion(models.Model):
     grade = models.IntegerField(null=True, blank=True,
                                 validators=[MinValueValidator(0),
                                             MaxValueValidator(2)])
-    comments = models.TextField(max_length=500, default='', blank=True)
+    comments = models.TextField(max_length=500, default='', blank=True,
+                                help_text='Use Markdown')
 
     def __str__(self):
         return 'Evalquest(id {}, evalassign {}, assign {},  evaluator {})'.\

@@ -78,8 +78,8 @@ Assignment {{ assignmentype.title }}
                           {% for evaluation in assignment.evalassignment_set.all %}
                              <td>
 								 {{ evaluation.evaluator.user.username }}<br>
-                                 {% if evaluation.grade_assignment %}
-                                 <button type="button" class={% if not evaluation.grade_evaluation %}"btn btn-info"{% elif evaluation.grade_evaluation == -1 %}"btn btn-warning"{% elif evaluation.grade_evaluation == -1 %}"btn btn-warning"{% else %}"btn btn-primary"{% endif %} data-toggle="modal" data-target="#comments{{ evaluation.id }}">{{ evaluation.grade_assignment }}</button>
+                                 {% if evaluation.is_questions_graded %}
+                                 <button type="button" class={% if not evaluation.grade_evaluation %}"btn btn-info"{% elif evaluation.grade_evaluation == -1 %}"btn btn-warning"{% elif evaluation.grade_evaluation == -1 %}"btn btn-warning"{% else %}"btn btn-primary"{% endif %} data-toggle="modal" data-target="#comments{{ evaluation.id }}"><span class="glyphicon glyphicon-eye-open"></span></button>
                                       <!-- Modal -->
                                       <div class="modal fade" id="comments{{ evaluation.id }}" role="dialog">
                                         <div class="modal-dialog">
@@ -90,7 +90,10 @@ Assignment {{ assignmentype.title }}
                                               <h4 class="modal-title">Evaluation comments &nbsp; &nbsp; &nbsp; &nbsp; {{ evaluation.grade_assignment }}  &nbsp; &nbsp; {% if evaluation.grade_evaluation == -1 %}<span class="glyphicon glyphicon-thumbs-down" aria-hidden="true"></span>{% elif evaluation.grade_evaluation == 0 %}<span class="glyphicon glyphicon-minus" aria-hidden="true"></span>{% elif evaluation.grade_evaluation == 1 %}<span class="glyphicon glyphicon-thumbs-up" aria-hidden="true"></span>{% endif %}</h4>
                                             </div>
                                             <div class="modal-body">
-                                              <p>{{ evaluation.grade_assignment_comments|markdownify|safe }}</p>
+                                              <p>{% for question in evaluation.evalquestion_set.all %}
+                                              <b>Question {{ question.question }}: {{ question.grade }}/2</b><br>
+                                            {{ question.comments|markdownify|safe }}
+                                              {% endfor %}</p>
                                             </div>
                                             <div class="modal-footer">
                                               <a class="btn btn-primary" href="{% url 'gradapp:generate_txt_comments' evaluation.id %}">Get comments in a txt file <span class="glyphicon glyphicon-download"></span></a><button type="button" class="btn btn-default" data-dismiss="modal">Close</button>

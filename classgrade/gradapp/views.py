@@ -106,14 +106,13 @@ def is_evaluated(evalassignment):
             assignment.assignmentype.deadline_submission > timezone.now():
         return -30
     else:
-        list_grade = [qq.grade for qq in evalassignment.evalquestion_set.all()]
-        if None in list_grade:
-            return -20
-        else:
+        if evalassignment.is_questions_graded:
             if evalassignment.grade_evaluation:
                 return evalassignment.grade_evaluation
             else:
                 return -10
+        else:
+            return -20
 
 
 def index(request):
@@ -159,9 +158,7 @@ def dashboard_student(request):
                            enumerate(to_be_evaluated)]
         # get evaluations given to the student assignment
         if assignment.assignmentype.deadline_grading < timezone.now():
-            evaluations = [(e.id,
-                            (None not in [q.grade
-                                          for q in e.evalquestion_set.all()]),
+            evaluations = [(e.id, e.is_questions_graded,
                             e.grade_evaluation, e.grade_assignment,
                             [(qq.question, qq.grade, qq.comments)
                              for qq in e.evalquestion_set.all()])
@@ -236,6 +233,10 @@ def eval_assignment(request, pk):
                 formset.save()
                 # if evaluation is modified, evaluation grade is reset
                 evalassignment.grade_evaluation = None
+                evalassignment.is_questions_graded =\
+                    (None not in [q.grade for q
+                                  in evalassignment.evalquestion_set.all()])
+                evalassignment.save()
                 return redirect('/dashboard_student/#assignment%s' %
                                 evalassignment.assignment.id)
         else:

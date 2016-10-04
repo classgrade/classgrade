@@ -60,6 +60,7 @@ class Assignmentype(models.Model):
     file_type = models.CharField(max_length=20, default='ipynb')
     deadline_submission = models.DateTimeField(help_text='DD/MM/YY')
     deadline_grading = models.DateTimeField(help_text='DD/MM/YY')
+    nb_questions = models.IntegerField(default=1)
     prof = models.ForeignKey(Prof)
     list_students = models.FileField(max_length=100, null=True, blank=True,
                                      help_text='csv file, each row contains'
@@ -114,11 +115,26 @@ class Evalassignment(models.Model):
     grade_assignment_comments = models.TextField(max_length=3000, default='',
                                                  blank=True)
     grade_evaluation = models.IntegerField(null=True, blank=True,
-                                           validators=[MaxValueValidator(-1),
-                                                       MinValueValidator(1)])
+                                           validators=[MaxValueValidator(1),
+                                                       MinValueValidator(-1)])
     grade_evaluation_comments = models.TextField(max_length=300, default='',
                                                  blank=True)
 
     def __str__(self):
         return 'Evalassignment(id {}, assignment {},  evaluator {})'.\
             format(self.id, self.assignment.id, self.evaluator.user.username)
+
+
+class Evalquestion(models.Model):
+    evalassignment = models.ForeignKey(Evalassignment, on_delete=models.CASCADE)
+    question = models.IntegerField()
+    grade = models.IntegerField(null=True, blank=True,
+                                validators=[MinValueValidator(0),
+                                            MaxValueValidator(2)])
+    comments = models.TextField(max_length=500, default='', blank=True)
+
+    def __str__(self):
+        return 'Evalquest(id {}, evalassign {}, assign {},  evaluator {})'.\
+            format(self.id, self.evalassignment.id,
+                   self.evalassignment.assignment.id,
+                   self.evalassignment.evaluator.user.username)

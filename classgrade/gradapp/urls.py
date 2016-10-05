@@ -4,6 +4,7 @@ from . import views
 
 urlpatterns = [
     url(r'^$', views.index, name='index'),
+    # For Prof
     url(r'^list_assignmentypes_running/$', views.list_assignmentypes_running,
         name='list_assignmentypes_running'),
     url(r'^list_assignmentypes_archived/$', views.list_assignmentypes_archived,
@@ -26,12 +27,15 @@ urlpatterns = [
         views.create_assignmentype, name='reset_assignmentype'),
     url(r'^modify_assignmentype/(?P<pk>[0-9]+)/$',
         views.modify_assignmentype, name='modify_assignmentype'),
+    url(r'^coeff_assignmentype/(?P<pk>[0-9]+)/$',
+        views.coeff_assignmentype, name='coeff_assignmentype'),
     url(r'^validate_assignmentype_students/$',
         views.validate_assignmentype_students,
         name='validate_assignmentype_students'),
     url(r'^create_assignmentype_students/$',
         views.create_assignmentype_students,
         name='create_assignmentype_students'),
+    # For students
     url(r'^dashboard_student/$', views.dashboard_student,
         name='dashboard_student'),
     url(r'^upload_assignment/(?P<pk>[0-9]+)/$', views.upload_assignment,

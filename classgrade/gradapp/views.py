@@ -17,7 +17,7 @@ from xkcdpass import xkcd_password as xp
 from unidecode import unidecode
 from classgrade import settings
 from gradapp.forms import AssignmentypeForm, AssignmentForm
-from gradapp.forms import LightAssignmentypeForm
+from gradapp.forms import LightAssignmentypeForm, CoeffForm
 from gradapp.models import Assignment, Assignmentype, Student, Evalassignment
 from gradapp.models import Evalquestion
 from gradapp import tasks
@@ -237,6 +237,9 @@ def eval_assignment(request, pk):
                     (None not in [q.grade for q
                                   in evalassignment.evalquestion_set.all()])
                 evalassignment.save()
+                # set evalassignment.grade_assignment if question coeff exist
+                log = tasks.compute_grade_evalassignment(evalassignment.id)
+                logger.error(log)
                 return redirect('/dashboard_student/#assignment%s' %
                                 evalassignment.assignment.id)
         else:
@@ -501,6 +504,9 @@ def list_assignmentypes_archived(request):
 @login_required
 @login_prof
 def detail_assignmentype(request, pk):
+    """
+    Dashboard of an assignmentype (id=pk)
+    """
     prof = request.user.prof
     context = {'prof': prof}
     assignmentype = Assignmentype.objects.filter(pk=pk, prof=prof).first()
@@ -510,7 +516,39 @@ def detail_assignmentype(request, pk):
         return render(request, 'gradapp/detail_assignmentype.html',
                       context)
     else:
-        return redirect('gradapp:index')
+        return redirect('gradapp:list_assignmentypes_running')
+
+
+@login_required
+@login_prof
+def coeff_assignmentype(request, pk):
+    """
+    Set up coefficients of an assignmentype (id=pk)
+    """
+    prof = request.user.prof
+    context = {'prof': prof}
+    assignmentype = Assignmentype.objects.filter(pk=pk, prof=prof).first()
+    if assignmentype:
+        if request.method == 'POST':
+            form = CoeffForm(request.POST,
+                             nb_questions=assignmentype.nb_questions)
+            if form.is_valid():
+                assignmentype.questions_coeff = form.cleaned_data['coeff']
+                assignmentype.save()
+                # Compute all grades
+                log = tasks.compute_grades_assignmentype(assignmentype.id)
+                logger.error(log)
+                return redirect('/detail_assignmentype/%s/' % pk)
+            else:
+                context['error'] = 'Sum of coeff must be 10'
+        else:
+            form = CoeffForm(nb_questions=assignmentype.nb_questions,
+                             initial={'coeff': assignmentype.questions_coeff})
+        context['form'] = form
+        context['assignmentype'] = assignmentype
+        return render(request, 'gradapp/coeff_assignmentype.html',
+                      context)
+    return redirect('gradapp:list_assignmentypes_running')
 
 
 @login_required
@@ -525,9 +563,12 @@ def generate_csv_grades(request, pk):
         for assignment in assignmentype.assignment_set.all():
             list_as = [assignment.student.user.username]
             for evaluation in assignment.evalassignment_set.all():
-                list_as.extend([evaluation.evaluator.user.username,
-                                evaluation.grade_assignment,
-                                evaluation.grade_evaluation])
+                list_grades = [eq.grade for eq in evaluation.
+                               evalquestion_set.all().order_by('question')]
+                list_evaluation = [evaluation.evaluator.user.username,
+                                   evaluation.grade_assignment] + list_grades +\
+                                  [evaluation.grade_evaluation]
+                list_as.extend(list_evaluation)
             writer.writerow(list_as)
     else:
         writer.writerow(['Oups... you might not be a prof or this assignment '

@@ -48,3 +48,51 @@ def email_new_student(student_email, student_login, student_password):
                 settings.SITE_URL))
     send_mail(subject, message, settings.EMAIL_HOST_USER,
               [student_email], fail_silently=False)
+
+
+def compute_grades_assignmentype(assignmentype_id):
+    """
+    Compute grades of an assignmentype if question coefficients have been set
+    """
+    try:
+        assignmentype = Assignmentype.objects.get(id=assignmentype_id)
+        if assignmentype.questions_coeff:
+            questions_coeff = assignmentype.questions_coeff
+            for assignment in assignmentype.assignment_set.all():
+                for evalassignment in assignment.evalassignment_set.all():
+                    if evalassignment.is_questions_graded:
+                        assign_grade = 0
+                        for coeff, evalq\
+                            in zip(questions_coeff, evalassignment.
+                                   evalquestion_set.all().order_by('question')):
+                            assign_grade = assign_grade + coeff * evalq.grade
+                        evalassignment.grade_assignment = assign_grade
+                        evalassignment.save()
+        else:
+            return 'Question coeff are not defined'
+    except Exception as e:
+        return 'Oups... ' + str(e)
+
+
+def compute_grade_evalassignment(evalassignment_id):
+    """
+    Compute evalassignment.grade_assignment of
+    evalassignment(id=evalassignment_id) if question coeff of associated
+    assignmentype have been defined
+    """
+    try:
+        evalassignment = Evalassignment.objects.get(id=evalassignment_id)
+        questions_coeff = evalassignment.assignment.assignmentype.\
+            questions_coeff
+        if questions_coeff:
+            assign_grade = 0
+            for coeff, evalq in zip(questions_coeff, evalassignment.
+                                    evalquestion_set.all().
+                                    order_by('question')):
+                assign_grade = assign_grade + coeff * evalq.grade
+            evalassignment.grade_assignment = assign_grade
+            evalassignment.save()
+        else:
+            return 'Question coeff are not defined'
+    except Exception as e:
+        return 'Oups... ' + str(e)

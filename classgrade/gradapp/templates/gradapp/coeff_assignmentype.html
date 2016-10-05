@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% load staticfiles %}
+{% load crispy_forms_tags %}
+{% load markdownify %}
+
+{% block title %}
+
+{{ assignmentype.title }}
+
+{% endblock title %}
+
+{% block content %}
+
+
+<div class="row">
+    <div class="col-lg-12"> 
+        <div class="chart-wrapper">
+            <div class="chart-title">
+                Set coefficient for each question (<font color="#FE6672">Sum of coeff must be 10</font>)
+            </div>
+            <div class="chart-stage">
+                <form action="{% url 'gradapp:coeff_assignmentype' assignmentype.id %}" method="post" enctype="multipart/form-data">
+                       {% csrf_token %}
+                       {{ form|crispy }}
+                       {% if error %}
+                            <b><font color="#FE6672">{{ error }}</font></b>
+                       {% endif %}
+                       <p><input type="submit" value="Submit" /></p>
+                </form>
+            </div> 
+        </div>
+    </div>
+</div>
+{% endblock content %}
+

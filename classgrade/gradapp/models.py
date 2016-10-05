@@ -165,7 +165,7 @@ class Evalquestion(models.Model):
     """
     evalassignment = models.ForeignKey(Evalassignment, on_delete=models.CASCADE)
     question = models.IntegerField()
-    grade = models.IntegerField(null=True, blank=True,
+    grade = models.IntegerField(null=True, blank=True, help_text='0, 1, or 2',
                                 validators=[MinValueValidator(0),
                                             MaxValueValidator(2)])
     comments = models.TextField(max_length=500, default='', blank=True,

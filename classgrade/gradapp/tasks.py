@@ -39,10 +39,12 @@ def email_new_student(student_email, student_login, student_password):
     login and password, which need to be reset
     """
     subject = 'Peergrade Telecom'
-    message = (u'Bonjour et bienvenus sur Peergrade Telecom.\n\n'
+    message = (u'Bonjour et bienvenu sur Peergrade Telecom.\n\n'
                u'Pour vous connecter à Peergrade Telecom, votre login et votre '
                u'mot de passe sont:\n    %s\n    %s\nPour plus de sécurité, '
-               u'modifier votre mot de passe:%s\n\nAdresse du site:%s' %
+               u'modifier votre mot de passe:%s\n\nAdresse du site:%s'
+               u' Bon travail,\n'
+               u" L' équipe enseignante." %
                (student_login, student_password,
                 settings.SITE_URL + 'accounts-reset/recover/',
                 settings.SITE_URL))

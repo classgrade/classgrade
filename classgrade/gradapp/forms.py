@@ -44,19 +44,6 @@ class CoeffForm(forms.Form):
                                                remove_trailing_nulls=False)
         self.fields['coeff'].label = 'Coeff for Q1, ..., Q%s' % nb_questions
 
-    def is_valid(self):
-        # run the parent validation first
-        valid = super(CoeffForm, self).is_valid()
-        # we're done now if not valid
-        if not valid:
-            return valid
-        # so far so good, let us now check if sum(coeff)=10
-        coeff = self.cleaned_data['coeff']
-        if sum(coeff) == 10:
-            return True
-        else:
-            return False
-
 
 # class EvalassignmentForm(ModelForm):
 #

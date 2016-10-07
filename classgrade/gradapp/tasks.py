@@ -62,11 +62,15 @@ def compute_grades_assignmentype(assignmentype_id):
                 for evalassignment in assignment.evalassignment_set.all():
                     if evalassignment.is_questions_graded:
                         assign_grade = 0
+                        sum_coeff = 0
                         for coeff, evalq\
                             in zip(questions_coeff, evalassignment.
                                    evalquestion_set.all().order_by('question')):
-                            assign_grade = assign_grade + coeff * evalq.grade
-                        evalassignment.grade_assignment = assign_grade
+                            assign_grade += coeff * evalq.grade
+                            sum_coeff += coeff
+                        evalassignment.grade_assignment = int(assign_grade *
+                                                              10 * 100 /
+                                                              sum_coeff) / 100
                         evalassignment.save()
         else:
             return 'Question coeff are not defined'

@@ -539,8 +539,6 @@ def coeff_assignmentype(request, pk):
                 log = tasks.compute_grades_assignmentype(assignmentype.id)
                 logger.error(log)
                 return redirect('/detail_assignmentype/%s/' % pk)
-            else:
-                context['error'] = 'Sum of coeff must be 10'
         else:
             form = CoeffForm(nb_questions=assignmentype.nb_questions,
                              initial={'coeff': assignmentype.questions_coeff})

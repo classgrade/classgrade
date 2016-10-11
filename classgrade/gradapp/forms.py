@@ -1,7 +1,7 @@
 from django import forms
+from django.core.validators import MinValueValidator
 from gradapp.models import Assignmentype, Assignment
 from datetimewidget.widgets import DateTimeWidget
-from django.contrib.postgres.forms import SplitArrayField
 
 
 class AssignmentypeForm(forms.ModelForm):
@@ -39,10 +39,10 @@ class CoeffForm(forms.Form):
     def __init__(self, *args, **kwargs):
         nb_questions = kwargs.pop('nb_questions')
         super(CoeffForm, self).__init__(*args, **kwargs)
-        self.fields['coeff'] = SplitArrayField(forms.FloatField(required=True),
-                                               size=nb_questions,
-                                               remove_trailing_nulls=False)
-        self.fields['coeff'].label = 'Coeff for Q1, ..., Q%s' % nb_questions
+        for i in range(1, nb_questions + 1):
+            self.fields['coeff_%s' % i] = forms.\
+                FloatField(required=True, validators=[MinValueValidator(0)])
+            self.fields['coeff_%s' % i].label = 'Q%i' % i
 
 
 # class EvalassignmentForm(ModelForm):

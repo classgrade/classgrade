@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 
 {% load staticfiles %}
-{% load crispy_forms_tags %}
 {% load markdownify %}
 
 {% block title %}
@@ -22,7 +21,7 @@
             <div class="chart-stage">
                 <form action="{% url 'gradapp:coeff_assignmentype' assignmentype.id %}" method="post" enctype="multipart/form-data">
                        {% csrf_token %}
-                       {{ form|crispy }}
+                       {{ form.as_table }}
                        {% if error %}
                             <b><font color="#FE6672">{{ error }}</font></b>
                        {% endif %}

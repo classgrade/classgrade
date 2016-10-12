@@ -251,7 +251,6 @@ def eval_assignment(request, pk):
                    'title': evalassignment.assignment.assignmentype.title,
                    'description': evalassignment.assignment.
                    assignmentype.description,
-                   'assignment_doc': evalassignment.assignment.document.url,
                    'evalassignment_id': evalassignment.id,
                    'deadline': evalassignment.assignment.assignmentype.
                    deadline_grading,
@@ -264,6 +263,25 @@ def eval_assignment(request, pk):
         else:
             redirect_item = ''
         return redirect('/dashboard_student/' + redirect_item)
+
+
+@login_required
+@login_student
+def download_assignment(request, pk):
+    """
+    Get assignment to be evaluated
+    """
+    student = request.user.student
+    evalassignment = Evalassignment.objects.\
+        filter(pk=pk, evaluator=student).first()
+    if evalassignment:
+        filename = evalassignment.assignment.document.name.split('/')[-1]
+        response = HttpResponse(evalassignment.assignment.document,
+                                content_type='application/force_download')
+        response['Content-Disposition'] = 'attachment; filename=%s' % filename
+        return response
+    else:
+        return redirect('gradapp:dashboard_student')
 
 
 @login_required

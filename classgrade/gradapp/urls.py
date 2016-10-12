@@ -44,6 +44,8 @@ urlpatterns = [
         name='get_assignment'),
     url(r'^eval_assignment/(?P<pk>[0-9]+)/$', views.eval_assignment,
         name='eval_assignment'),
+    url(r'^download_assignment/(?P<pk>[0-9]+)/$', views.download_assignment,
+        name='download_assignment'),
     url(r'^eval_evalassignment/(?P<pk>[0-9]+)/(?P<pts>-?[0-1]+)$',
         views.eval_evalassignment, name='eval_evalassignment'),
 ]

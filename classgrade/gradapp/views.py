@@ -551,15 +551,21 @@ def coeff_assignmentype(request, pk):
             form = CoeffForm(request.POST,
                              nb_questions=assignmentype.nb_questions)
             if form.is_valid():
-                assignmentype.questions_coeff = form.cleaned_data['coeff']
+                assignmentype.questions_coeff = [form.cleaned_data['coeff_%s'
+                                                                   % i] for i
+                                                 in range(1, assignmentype.
+                                                          nb_questions + 1)]
                 assignmentype.save()
                 # Compute all grades
                 log = tasks.compute_grades_assignmentype(assignmentype.id)
                 logger.error(log)
                 return redirect('/detail_assignmentype/%s/' % pk)
         else:
+            coeff = {}
+            for i in range(1, assignmentype.nb_questions + 1):
+                coeff['coeff_%s' % i] = assignmentype.questions_coeff[i - 1]
             form = CoeffForm(nb_questions=assignmentype.nb_questions,
-                             initial={'coeff': assignmentype.questions_coeff})
+                             initial=coeff)
         context['form'] = form
         context['assignmentype'] = assignmentype
         return render(request, 'gradapp/coeff_assignmentype.html',
@@ -606,7 +612,8 @@ def generate_txt_comments(request, pk):
     writer = csv.writer(response)
     if evalassignment:
         # writer.writerow([evalassignment.grade_assignment_comments])
-        for evalquestion in evalassignment.evalquestion_set.all():
+        for evalquestion in evalassignment.evalquestion_set.all().\
+                order_by('question'):
             writer.writerow(['****************************************'])
             writer.writerow(['****************************************'])
             writer.writerow(['Question %s' % evalquestion.question,

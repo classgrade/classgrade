@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% load staticfiles %}
+{% load crispy_forms_tags %}
+{% load markdownify %}
+
+{% block title %}
+
+{{ assignmentype.title }}
+
+{% endblock title %}
+
+{% block content %}
+
+
+<div class="row">
+    <div class="col-lg-12"> 
+        <div class="chart-wrapper">
+            <div class="chart-title">
+                Add a question 
+            </div>
+            <div class="chart-stage">
+                <form action="{% url 'gradapp:insert_question' assignmentype.id %}" method="post" enctype="multipart/form-data">
+                       {% csrf_token %}
+                       {{ form|crispy }}
+                       <p><input type="submit" value="Add question" /></p>
+                </form>
+            </div> 
+        </div>
+    </div>
+</div>
+{% endblock content %}
+

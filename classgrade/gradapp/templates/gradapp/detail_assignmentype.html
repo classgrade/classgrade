@@ -22,6 +22,7 @@ Assignment {{ assignmentype.title }}
                       <tr>
                         <th>Description</th>
                         <th>Number of graders</th>
+                        <th>Number of questions</th>
                         <th>Question coefficients</th>
                         <th>File type</th>
                         <th>Deadline submission</th>
@@ -32,6 +33,7 @@ Assignment {{ assignmentype.title }}
                        <tr>
                          <td>{{ assignmentype.description|markdownify|safe }}</td>
                          <td>{{ assignmentype.nb_grading }}</td>
+                         <td>{{ assignmentype.nb_questions }}</td>
                          <td>{{ assignmentype.questions_coeff }}</td>
                          <td>{{ assignmentype.file_type }}</td>
                          <td>{{ assignmentype.deadline_submission }}</td>

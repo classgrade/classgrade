@@ -146,6 +146,11 @@ class Evalassignment(models.Model):
 
     is_questions_graded = models.BooleanField(default=False)
 
+    def reset_grade(self):
+        self.grade_assignment = None
+        self.grade_evaluation = None
+        self.is_questions_graded = False
+
     def __str__(self):
         return 'Evalassignment(id {}, assignment {},  evaluator {})'.\
             format(self.id, self.assignment.id, self.evaluator.user.username)

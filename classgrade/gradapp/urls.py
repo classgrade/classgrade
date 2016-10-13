@@ -29,6 +29,8 @@ urlpatterns = [
         views.modify_assignmentype, name='modify_assignmentype'),
     url(r'^coeff_assignmentype/(?P<pk>[0-9]+)/$',
         views.coeff_assignmentype, name='coeff_assignmentype'),
+    url(r'^insert_question_assignmentype/(?P<pk>[0-9]+)/$',
+        views.insert_question_assignmentype, name='insert_question'),
     url(r'^validate_assignmentype_students/$',
         views.validate_assignmentype_students,
         name='validate_assignmentype_students'),

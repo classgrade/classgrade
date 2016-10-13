@@ -1,5 +1,5 @@
 from django import forms
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
 from gradapp.models import Assignmentype, Assignment
 from datetimewidget.widgets import DateTimeWidget
 
@@ -45,10 +45,14 @@ class CoeffForm(forms.Form):
             self.fields['coeff_%s' % i].label = 'Q%i' % i
 
 
-# class EvalassignmentForm(ModelForm):
-#
-#     class Meta:
-#         model = Evalassignment
-#         fields = ['grade_assignment', 'grade_assignment_comments']
-#         widgets = {'grade_assignment': NumberInput(attrs={'min': 0,
-#                                                           'max': 20})}
+class NbQuestionForm(forms.Form):
+
+    def __init__(self, *args, **kwargs):
+        nb_questions = kwargs.pop('nb_questions')
+        super(NbQuestionForm, self).__init__(*args, **kwargs)
+        self.fields['question'] = forms.IntegerField(
+            required=True, validators=[MinValueValidator(1),
+                                       MaxValueValidator(nb_questions + 1)])
+        self.fields['question'].label = 'Question number'
+        self.fields['question'].help_text = ('(value between 1 and %s)' %
+                                             (nb_questions + 1))

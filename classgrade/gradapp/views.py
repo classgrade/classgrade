@@ -5,6 +5,7 @@ from functools import wraps
 import csv
 import zipfile
 import django.forms as forms
+from django.db.models import F
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
@@ -17,7 +18,7 @@ from xkcdpass import xkcd_password as xp
 from unidecode import unidecode
 from classgrade import settings
 from gradapp.forms import AssignmentypeForm, AssignmentForm
-from gradapp.forms import LightAssignmentypeForm, CoeffForm
+from gradapp.forms import LightAssignmentypeForm, CoeffForm, NbQuestionForm
 from gradapp.models import Assignment, Assignmentype, Student, Evalassignment
 from gradapp.models import Evalquestion
 from gradapp import tasks
@@ -152,7 +153,8 @@ def dashboard_student(request):
         # get assignments to be evaluated by the student
         to_be_evaluated = Evalassignment.objects.\
             filter(evaluator=student,
-                   assignment__assignmentype=assignment.assignmentype)
+                   assignment__assignmentype=assignment.assignmentype).\
+            order_by('pk')
         to_be_evaluated = [(i, is_evaluated(evalassignment),
                             evalassignment.id) for i, evalassignment in
                            enumerate(to_be_evaluated)]
@@ -161,8 +163,9 @@ def dashboard_student(request):
             evaluations = [(e.id, e.is_questions_graded,
                             e.grade_evaluation, e.grade_assignment,
                             [(qq.question, qq.grade, qq.comments)
-                             for qq in e.evalquestion_set.all()])
-                           for e in assignment.evalassignment_set.all()]
+                             for qq in e.evalquestion_set.all().order_by('pk')])
+                           for e in
+                           assignment.evalassignment_set.all().order_by('pk')]
         else:
             evaluations = [(None, None, None, None, None)] * assignment.\
                 assignmentype.nb_grading
@@ -369,6 +372,47 @@ def create_assignmentype(request, assignmentype_id=None):
 
 @login_required
 @login_prof
+def insert_question_assignmentype(request, pk):
+    """
+    Insert a question for an assignmentype. The user enters in a form a
+    question to be created
+    """
+    prof = request.user.prof
+    assignmentype = Assignmentype.objects.filter(id=pk, prof=prof).first()
+    if assignmentype:
+        if request.method == 'POST':
+            form = NbQuestionForm(request.POST,
+                                  nb_questions=assignmentype.nb_questions)
+            if form.is_valid():
+                question = form.cleaned_data['question']
+                # Modify attribute question of all associated evalquestion
+                evalquestions = Evalquestion.objects.filter(
+                    evalassignment__assignment__assignmentype=assignmentype,
+                    question__gte=question)
+                evalquestions.update(question=F('question') + 1)
+                # Create a new evalquestion for each evalassignment
+                # and inform that it has to be graded
+                for evalassignment in Evalassignment.objects.filter(
+                        assignment__assignmentype=assignmentype):
+                    Evalquestion.objects.create(evalassignment=evalassignment,
+                                                question=question)
+                    evalassignment.reset_grade()
+                    evalassignment.save()
+                # Add a question to the assignmentype
+                assignmentype.nb_questions += 1
+                assignmentype.questions_coeff.insert(question - 1, None)
+                assignmentype.save()
+                return redirect('/detail_assignmentype/%s/' % assignmentype.pk)
+        else:
+            form = NbQuestionForm(nb_questions=assignmentype.nb_questions)
+        context = {'assignmentype': assignmentype, 'form': form}
+        return render(request, 'gradapp/insert_question.html', context)
+    else:
+        return redirect('gradapp:index')
+
+
+@login_required
+@login_prof
 def modify_assignmentype(request, pk):
     """
     Modify assignmentype fields, except student list.
@@ -547,9 +591,10 @@ def coeff_assignmentype(request, pk):
     context = {'prof': prof}
     assignmentype = Assignmentype.objects.filter(pk=pk, prof=prof).first()
     if assignmentype:
+        nb_questions = assignmentype.nb_questions
         if request.method == 'POST':
             form = CoeffForm(request.POST,
-                             nb_questions=assignmentype.nb_questions)
+                             nb_questions=nb_questions)
             if form.is_valid():
                 assignmentype.questions_coeff = [form.cleaned_data['coeff_%s'
                                                                    % i] for i
@@ -561,10 +606,16 @@ def coeff_assignmentype(request, pk):
                 logger.error(log)
                 return redirect('/detail_assignmentype/%s/' % pk)
         else:
+            questions_coeff = assignmentype.questions_coeff
             coeff = {}
-            for i in range(1, assignmentype.nb_questions + 1):
-                coeff['coeff_%s' % i] = assignmentype.questions_coeff[i - 1]
-            form = CoeffForm(nb_questions=assignmentype.nb_questions,
+            if questions_coeff:
+                for i in range(1, nb_questions + 1):
+                    coeff['coeff_%s' % i] = assignmentype.questions_coeff[i - 1]
+            else:
+                coeff = dict.fromkeys(['coeff_%s' % i
+                                       for i in range(1, nb_questions + 1)],
+                                      None)
+            form = CoeffForm(nb_questions=nb_questions,
                              initial=coeff)
         context['form'] = form
         context['assignmentype'] = assignmentype

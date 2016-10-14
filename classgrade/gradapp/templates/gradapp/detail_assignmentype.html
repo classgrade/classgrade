@@ -47,6 +47,7 @@ Assignment {{ assignmentype.title }}
                     <a class="btn btn-warning" href="{% url 'gradapp:coeff_assignmentype' assignmentype.id %}">Set question coefficients <span class="glyphicon glyphicon-pencil"></span></a>
                     <a class="btn btn-primary" href="{% url 'gradapp:generate_csv_grades' assignmentype.id %}">Get csv with student grades <span class="glyphicon glyphicon-download"></span></a>
                     <a class="btn btn-danger" href="{% url 'gradapp:generate_zip_assignments' assignmentype.id %}">Get zip with student assignments <span class="glyphicon glyphicon-download"></span></a>
+                    <a class="btn btn-default" href="{% url 'gradapp:show_eval_distrib' assignmentype.id %}">Show stats <span class="glyphicon glyphicon-stats"></span></a>
                 </center>
                 </p>
             </div> <!-- chart-stage -->

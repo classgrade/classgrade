@@ -583,6 +583,32 @@ def detail_assignmentype(request, pk):
 
 @login_required
 @login_prof
+def show_eval_distrib(request, pk):
+    prof = request.user.prof
+    context = {'prof': prof}
+    assignmentype = Assignmentype.objects.filter(pk=pk, prof=prof).first()
+    if assignmentype:
+        context['assignmentype'] = assignmentype
+        context['stat_questions'] = []
+        for question in range(1, assignmentype.nb_questions + 1):
+            questions_stat = [Evalquestion.objects.filter(
+                question=question, grade=igrade,
+                evalassignment__assignment__assignmentype=assignmentype).count()
+                              for igrade in range(3)]
+            try:
+                questions_stat = [100. * i / sum(questions_stat)
+                                  for i in questions_stat]
+            except ZeroDivisionError:
+                questions_stat = [0, 0, 0]
+            context['stat_questions'].append([question, questions_stat])
+        return render(request, 'gradapp/plot_assignmentype.html',
+                      context)
+    else:
+        return redirect('gradapp:list_assignmentypes_running')
+
+
+@login_required
+@login_prof
 def coeff_assignmentype(request, pk):
     """
     Set up coefficients of an assignmentype (id=pk)

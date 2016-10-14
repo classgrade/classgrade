@@ -11,6 +11,8 @@ urlpatterns = [
         name='list_assignmentypes_archived'),
     url(r'^detail_assignmentype/(?P<pk>[0-9]+)/$',
         views.detail_assignmentype, name='detail_assignmentype'),
+    url(r'^show_eval_distrib/(?P<pk>[0-9]+)/$',
+        views.show_eval_distrib, name='show_eval_distrib'),
     url(r'^csv_grades/(?P<pk>[0-9]+)/$', views.generate_csv_grades,
         name='generate_csv_grades'),
     url(r'^zip_assignments/(?P<pk>[0-9]+)/$', views.generate_zip_assignments,

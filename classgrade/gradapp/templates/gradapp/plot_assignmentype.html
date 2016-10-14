@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% load staticfiles %}
+{% load crispy_forms_tags %}
+{% load markdownify %}
+
+{% block head %}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.3.0/Chart.bundle.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.3.0/Chart.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.3.0/Chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.3.0/Chart.min.js"></script>
+{% endblock head %}
+
+{% block title %}
+
+Assignment {{ assignmentype.title }}
+
+{% endblock title %}
+
+{% block content %}
+
+
+<div class="row">
+	<div class="col-lg-12">
+        <div class="chart-wrapper">
+			<div class="chart-title">
+                Grade proportion for each question
+            </div>
+
+            <div class="chart-stage">
+                {% for question, stat_question in stat_questions %}
+	                <div class="col-lg-2">
+                        <div class="chart-wrapper">
+                            <div class="chart-stage">
+				 				<canvas id="prop{{ question }}" width="20" height="20"></canvas>
+                            </div> <!-- chart-wrapper -->
+                        </div> <!-- col-lg-2 -->
+                    </div> <!-- row -->
+                {% endfor %}
+            </div> <!-- chart-stage -->
+        </div> <!-- chart-wrapper -->
+    </div> <!-- col-lg-12 -->
+</div> <!-- row -->
+
+{% endblock content %}
+{% block scripts %}
+ <script>
+{% for question, stat_question in stat_questions %}
+    var ctx = document.getElementById("prop" + {{ question }});
+	var prop = new Chart(ctx,{
+        type: 'pie',
+        data: { 
+        	labels: ["0", "1", "2"],
+        	datasets: [
+            	{
+                	data: {{ stat_question }},
+                	backgroundColor: ["#FE6672", "#00BBDE", "#EEB058"],
+                	hoverBackgroundColor: ["#FE808A", "#B3EBF5", "#FAE8CD"]
+            	}]
+			  },
+			options: {
+        		responsive: true,
+				title: {
+            		display: true,
+            		text: 'Q' + {{ question }}
+        				}
+    				}
+    });
+{% endfor %}
+ </script>
+{% endblock scripts %}
+

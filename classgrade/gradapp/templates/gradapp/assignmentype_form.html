@@ -42,7 +42,9 @@ Assignment
                 </form>
                 </div>
                 <div class="col-lg-4">
-                   <a class="btn btn-info" href="{% url 'gradapp:insert_question' assignmentype_id %}">Add a question <span class="glyphicon glyphicon-plus"></span></a>
+                  {% if type_post == 'modify' %}
+                     <a class="btn btn-info" href="{% url 'gradapp:insert_question' assignmentype_id %}">Add a question <span class="glyphicon glyphicon-plus"></span></a>
+                  {% endif %}
                 </div>
             </div> 
         </div>

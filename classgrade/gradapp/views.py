@@ -278,7 +278,8 @@ def download_assignment(request, pk):
     evalassignment = Evalassignment.objects.\
         filter(pk=pk, evaluator=student).first()
     if evalassignment:
-        filename = 'assign_%s' % pk
+        filename = 'assign_%s.%s' % (pk, evalassignment.assignment.
+                                     document.name.split('.')[-1])
         response = HttpResponse(evalassignment.assignment.document,
                                 content_type='application/force_download')
         response['Content-Disposition'] = 'attachment; filename=%s' % filename

@@ -719,11 +719,13 @@ def generate_zip_assignments(request, pk):
         for filename in files:
             assignment = Assignment.objects.\
                 filter(document='{0}/{1}'.format(dir_name, filename)).first()
-            new_filename = '{0}_{1}.{2}'.format(dir_name, assignment.student.
-                                                user.username,
-                                                filename.split('.')[-1])
-            zipf.write(os.path.abspath(os.path.join(root, filename)),
-                       arcname=new_filename)
+            if assignment:
+                new_filename = '{0}_{1}.{2}'.format(dir_name,
+                                                    assignment.student.user.
+                                                    username,
+                                                    filename.split('.')[-1])
+                zipf.write(os.path.abspath(os.path.join(root, filename)),
+                           arcname=new_filename)
     zipf.close()
     fsock = open(zip_name, "rb")
     response = HttpResponse(fsock,

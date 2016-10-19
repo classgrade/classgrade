@@ -658,6 +658,7 @@ def generate_csv_grades(request, pk):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="grades.csv"'
     writer = csv.writer(response)
+    writer.writerow(assignmentype.questions_coeff)
     if assignmentype:
         for assignment in assignmentype.assignment_set.all():
             list_as = [assignment.student.user.username]

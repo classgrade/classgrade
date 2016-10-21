@@ -45,14 +45,27 @@ class CoeffForm(forms.Form):
             self.fields['coeff_%s' % i].label = 'Q%i' % i
 
 
-class NbQuestionForm(forms.Form):
+class AddQuestionForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         nb_questions = kwargs.pop('nb_questions')
-        super(NbQuestionForm, self).__init__(*args, **kwargs)
+        super(AddQuestionForm, self).__init__(*args, **kwargs)
         self.fields['question'] = forms.IntegerField(
             required=True, validators=[MinValueValidator(1),
                                        MaxValueValidator(nb_questions + 1)])
         self.fields['question'].label = 'Question number'
         self.fields['question'].help_text = ('(value between 1 and %s)' %
                                              (nb_questions + 1))
+
+
+class RemoveQuestionForm(forms.Form):
+
+    def __init__(self, *args, **kwargs):
+        nb_questions = kwargs.pop('nb_questions')
+        super(RemoveQuestionForm, self).__init__(*args, **kwargs)
+        self.fields['question'] = forms.IntegerField(
+            required=True, validators=[MinValueValidator(1),
+                                       MaxValueValidator(nb_questions)])
+        self.fields['question'].label = 'Question number'
+        self.fields['question'].help_text = ('(value between 1 and %s)' %
+                                             (nb_questions))

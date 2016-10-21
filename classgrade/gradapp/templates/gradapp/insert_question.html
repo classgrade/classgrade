@@ -17,13 +17,13 @@
     <div class="col-lg-12"> 
         <div class="chart-wrapper">
             <div class="chart-title">
-                Add a question 
+                {{ info }} a question 
             </div>
             <div class="chart-stage">
-                <form action="{% url 'gradapp:insert_question' assignmentype.id %}" method="post" enctype="multipart/form-data">
+                <form action="{% url 'gradapp:insert_question' assignmentype.id cd %}" method="post" enctype="multipart/form-data">
                        {% csrf_token %}
                        {{ form|crispy }}
-                       <p><input type="submit" value="Add question" /></p>
+                       <p><input type="submit" value="{{ info }} question" /></p>
                 </form>
             </div> 
         </div>

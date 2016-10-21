@@ -18,7 +18,8 @@ from xkcdpass import xkcd_password as xp
 from unidecode import unidecode
 from classgrade import settings
 from gradapp.forms import AssignmentypeForm, AssignmentForm
-from gradapp.forms import LightAssignmentypeForm, CoeffForm, NbQuestionForm
+from gradapp.forms import LightAssignmentypeForm, CoeffForm
+from gradapp.forms import AddQuestionForm, RemoveQuestionForm
 from gradapp.models import Assignment, Assignmentype, Student, Evalassignment
 from gradapp.models import Evalquestion
 from gradapp import tasks
@@ -373,40 +374,58 @@ def create_assignmentype(request, assignmentype_id=None):
 
 @login_required
 @login_prof
-def insert_question_assignmentype(request, pk):
+def insert_question_assignmentype(request, pk, cd):
     """
-    Insert a question for an assignmentype. The user enters in a form a
-    question to be created
+    Insert a question for an assignmentype (pk=pk). The user enters in a form a
+    question to be created (cd=1) or a question to be deleted (cd=-1)
     """
     prof = request.user.prof
     assignmentype = Assignmentype.objects.filter(id=pk, prof=prof).first()
+    cd = int(cd)
+    print('cd %s' % cd)
+    print('type cd %s' % type(cd))
+    if cd == 1:
+        classForm = AddQuestionForm
+        info = 'Add'
+    elif cd == -1:
+        classForm = RemoveQuestionForm
+        info = 'Remove'
     if assignmentype:
         if request.method == 'POST':
-            form = NbQuestionForm(request.POST,
-                                  nb_questions=assignmentype.nb_questions)
+            form = classForm(request.POST,
+                             nb_questions=assignmentype.nb_questions)
             if form.is_valid():
                 question = form.cleaned_data['question']
                 # Modify attribute question of all associated evalquestion
+                if cd == -1:
+                    evalquestions = Evalquestion.objects.filter(
+                        evalassignment__assignment__assignmentype=assignmentype,
+                        question=question)
+                    evalquestions.delete()
                 evalquestions = Evalquestion.objects.filter(
                     evalassignment__assignment__assignmentype=assignmentype,
                     question__gte=question)
-                evalquestions.update(question=F('question') + 1)
-                # Create a new evalquestion for each evalassignment
+                evalquestions.update(question=F('question') + cd)
+                # Create a new evalquestion for each evalassignment (if cd=1)
                 # and inform that it has to be graded
                 for evalassignment in Evalassignment.objects.filter(
                         assignment__assignmentype=assignmentype):
-                    Evalquestion.objects.create(evalassignment=evalassignment,
-                                                question=question)
+                    if cd == 1:
+                        Evalquestion.objects.create(
+                            evalassignment=evalassignment, question=question)
                     evalassignment.reset_grade()
                     evalassignment.save()
                 # Add a question to the assignmentype
-                assignmentype.nb_questions += 1
-                assignmentype.questions_coeff.insert(question - 1, None)
+                assignmentype.nb_questions += cd
+                if cd == 1:
+                    assignmentype.questions_coeff.insert(question - 1, None)
+                elif cd == -1:
+                    del assignmentype.questions_coeff[question - 1]
                 assignmentype.save()
                 return redirect('/detail_assignmentype/%s/' % assignmentype.pk)
-        else:
-            form = NbQuestionForm(nb_questions=assignmentype.nb_questions)
-        context = {'assignmentype': assignmentype, 'form': form}
+        form = classForm(nb_questions=assignmentype.nb_questions)
+        context = {'assignmentype': assignmentype, 'form': form, 'info': info,
+                   'cd': cd}
         return render(request, 'gradapp/insert_question.html', context)
     else:
         return redirect('gradapp:index')

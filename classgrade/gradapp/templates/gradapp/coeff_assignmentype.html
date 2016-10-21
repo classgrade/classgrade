@@ -21,11 +21,22 @@
             <div class="chart-stage">
                 <form action="{% url 'gradapp:coeff_assignmentype' assignmentype.id %}" method="post" enctype="multipart/form-data">
                        {% csrf_token %}
-                       {{ form.as_table }}
-                       {% if error %}
+                       <div class="row">
+					   {% for field in form %}
+                           <div class="col-lg-2">
+                               {{ field.errors }}
+                               {{ field.label_tag }} {{ field }}
+                           </div>
+                       {% endfor %}
+					   </div>
+                       <div class="row">
+                       <center>
+					   {% if error %}
                             <b><font color="#FE6672">{{ error }}</font></b>
                        {% endif %}
                        <p><input type="submit" value="Submit" /></p>
+					   </center>
+					   </div>
                 </form>
             </div> 
         </div>

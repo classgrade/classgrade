@@ -413,7 +413,9 @@ def insert_question_assignmentype(request, pk, cd):
                     if cd == 1:
                         Evalquestion.objects.create(
                             evalassignment=evalassignment, question=question)
-                    evalassignment.reset_grade()
+                        evalassignment.reset_grade()
+                    elif cd == -1:
+                        evalassignment.grade_assignment = None
                     evalassignment.save()
                 # Add a question to the assignmentype
                 assignmentype.nb_questions += cd

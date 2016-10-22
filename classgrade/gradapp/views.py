@@ -421,9 +421,12 @@ def insert_question_assignmentype(request, pk, cd):
                 assignmentype.nb_questions += cd
                 if cd == 1:
                     assignmentype.questions_coeff.insert(question - 1, None)
+                    assignmentype.save()
                 elif cd == -1:
                     del assignmentype.questions_coeff[question - 1]
-                assignmentype.save()
+                    assignmentype.save()
+                    log = tasks.compute_grades_assignmentype(assignmentype.pk)
+                    logger.info(log)
                 return redirect('/detail_assignmentype/%s/' % assignmentype.pk)
         form = classForm(nb_questions=assignmentype.nb_questions)
         context = {'assignmentype': assignmentype, 'form': form, 'info': info,

@@ -382,8 +382,6 @@ def insert_question_assignmentype(request, pk, cd):
     prof = request.user.prof
     assignmentype = Assignmentype.objects.filter(id=pk, prof=prof).first()
     cd = int(cd)
-    print('cd %s' % cd)
-    print('type cd %s' % type(cd))
     if cd == 1:
         classForm = AddQuestionForm
         info = 'Add'
@@ -420,10 +418,12 @@ def insert_question_assignmentype(request, pk, cd):
                 # Add a question to the assignmentype
                 assignmentype.nb_questions += cd
                 if cd == 1:
-                    assignmentype.questions_coeff.insert(question - 1, None)
+                    if assignmentype.questions_coeff:
+                        assignmentype.questions_coeff.insert(question - 1, None)
                     assignmentype.save()
                 elif cd == -1:
-                    del assignmentype.questions_coeff[question - 1]
+                    if assignmentype.questions_coeff:
+                        del assignmentype.questions_coeff[question - 1]
                     assignmentype.save()
                     log = tasks.compute_grades_assignmentype(assignmentype.pk)
                     logger.info(log)

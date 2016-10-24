@@ -164,7 +164,8 @@ def dashboard_student(request):
             evaluations = [(e.id, e.is_questions_graded,
                             e.grade_evaluation, e.grade_assignment,
                             [(qq.question, qq.grade, qq.comments)
-                             for qq in e.evalquestion_set.all().order_by('pk')])
+                             for qq in e.evalquestion_set.all().
+                             order_by('question')])
                            for e in
                            assignment.evalassignment_set.all().order_by('pk')]
         else:

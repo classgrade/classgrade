@@ -95,7 +95,7 @@ Assignment {{ assignmentype.title }}
                                               <h4 class="modal-title">Evaluation comments &nbsp; &nbsp; &nbsp; &nbsp; {{ evaluation.grade_assignment }}  &nbsp; &nbsp; {% if evaluation.grade_evaluation == -1 %}<span class="glyphicon glyphicon-thumbs-down" aria-hidden="true"></span>{% elif evaluation.grade_evaluation == 0 %}<span class="glyphicon glyphicon-minus" aria-hidden="true"></span>{% elif evaluation.grade_evaluation == 1 %}<span class="glyphicon glyphicon-thumbs-up" aria-hidden="true"></span>{% endif %}</h4>
                                             </div>
                                             <div class="modal-body">
-                                              <p>{% for question in evaluation.evalquestion_set.all %}
+                                              <p>{% for question in evaluation.order_question_set %}
                                               <b>Question {{ question.question }}: {{ question.grade }}/2</b><br>
                                             {{ question.comments|markdownify|safe }}
                                               {% endfor %}</p>

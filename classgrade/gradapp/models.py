@@ -151,6 +151,9 @@ class Evalassignment(models.Model):
         self.grade_evaluation = None
         self.is_questions_graded = False
 
+    def order_question_set(self):
+        return self.evalquestion_set.all().order_by('question')
+
     def __str__(self):
         return 'Evalassignment(id {}, assignment {},  evaluator {})'.\
             format(self.id, self.assignment.id, self.evaluator.user.username)

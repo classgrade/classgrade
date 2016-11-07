@@ -114,8 +114,6 @@ Assignment {{ assignmentype.title }}
                                      <button type="button" class="btn btn-default"><span class="glyphicon glyphicon-time"></span></button>
                                  {% elif evaluation.grade_evaluation == -1 %}
                                  <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#comments{{ evaluation.id }}"><span class="glyphicon glyphicon-thumbs-down"></span></button>
-                                 {% elif evaluation.grade_evaluation == 0 %}
-                                 <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#comments{{ evaluation.id }}"><span class="glyphicon glyphicon-minus"></span></button>
                                  {% elif evaluation.grade_evaluation == 1 %}
                                  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#comments{{ evaluation.id }}"><span class="glyphicon glyphicon-thumbs-up"></span></button>
                                  {% endif %}

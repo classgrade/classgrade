@@ -237,7 +237,7 @@ def eval_assignment(request, pk):
             if formset.is_valid():
                 formset.save()
                 # if evaluation is modified, evaluation grade is reset
-                evalassignment.grade_evaluation = None
+                evalassignment.grade_evaluation = 0
                 evalassignment.is_questions_graded =\
                     (None not in [q.grade for q
                                   in evalassignment.evalquestion_set.all()])

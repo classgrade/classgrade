@@ -51,7 +51,7 @@ Hi {{ student_name }}!
                                    {% elif is_evaluated == -10 %}
                                         <a class="btn btn-info" href="{% url 'gradapp:eval_assignment' evalassignment_id %}"> <span class="glyphicon glyphicon-ok"></span></a>
                                    {% else %}
-                                        <a class="btn btn-info" href="{% url 'gradapp:eval_assignment' evalassignment_id %}"> <span class="glyphicon glyphicon-ok">&nbsp;</span><span class={% if is_evaluated == -1 %}"glyphicon glyphicon-thumbs-down"{% elif is_evaluated == 0 %}"glyphicon glyphicon-minus"{% elif is_evaluated == 1 %}"glyphicon glyphicon-thumbs-up"{% endif %}></span></a>
+                                        <a class="btn btn-info" href="{% url 'gradapp:eval_assignment' evalassignment_id %}"> <span class="glyphicon glyphicon-ok">&nbsp;</span><span class={% if is_evaluated == -1 %}"glyphicon glyphicon-thumbs-down"{% elif is_evaluated == 1 %}"glyphicon glyphicon-thumbs-up"{% endif %}></span></a>
                                    {% endif %}
                                  {% endfor %}
                                  </center>
@@ -72,7 +72,6 @@ Hi {{ student_name }}!
                                               <button type="button" class="close" data-dismiss="modal">&times;</button>
                                               <h4 class="modal-title">Evaluation comments &nbsp; &nbsp; &nbsp; &nbsp; {{ grade_assignment }}  &nbsp; &nbsp;
 										           <a class={% if grade_evaluation == -1 %}"btn btn-danger"{% else %}"btn btn-default"{% endif %} href="{% url 'gradapp:eval_evalassignment' ieval -1 %}" data-toggle="tooltip" data-placement="top" title="I disagree with this evaluation"><span class="glyphicon glyphicon-thumbs-down"></span></a> 
-										           <a class={% if grade_evaluation == 0 %}"btn btn-danger"{% else %}"btn btn-default"{% endif %} href="{% url 'gradapp:eval_evalassignment' ieval 0 %}" data-toggle="tooltip" data-placement="top" title="I don't know what to think about this evaluation"><span class="glyphicon glyphicon-minus"></span></a> 
 										           <a class={% if grade_evaluation == 1 %}"btn btn-danger"{% else %}"btn btn-default"{% endif %} href="{% url 'gradapp:eval_evalassignment' ieval 1 %}"data-toggle="tooltip" data-placement="top" title="I agree with this evaluation"><span class="glyphicon glyphicon-thumbs-up"></span></a>
                                               </h4>
                                             </div>

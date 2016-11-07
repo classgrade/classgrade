@@ -138,7 +138,7 @@ class Evalassignment(models.Model):
                                                      MinValueValidator(0)])
     grade_assignment_comments = models.TextField(max_length=500, default='',
                                                  blank=True)
-    grade_evaluation = models.IntegerField(null=True, blank=True,
+    grade_evaluation = models.IntegerField(default=0,
                                            validators=[MaxValueValidator(1),
                                                        MinValueValidator(-1)])
     grade_evaluation_comments = models.TextField(max_length=300, default='',
@@ -148,7 +148,7 @@ class Evalassignment(models.Model):
 
     def reset_grade(self):
         self.grade_assignment = None
-        self.grade_evaluation = None
+        self.grade_evaluation = 0
         self.is_questions_graded = False
 
     def order_question_set(self):

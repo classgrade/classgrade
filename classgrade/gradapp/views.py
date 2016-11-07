@@ -5,7 +5,7 @@ from functools import wraps
 import csv
 import zipfile
 import django.forms as forms
-from django.db.models import F, Avg
+from django.db.models import F, Avg, StdDev
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
@@ -598,8 +598,12 @@ def detail_assignmentype(request, pk):
     prof = request.user.prof
     context = {'prof': prof}
     assignmentype = Assignmentype.objects.filter(pk=pk, prof=prof).first()
+    assignments = assignmentype.assignment_set.\
+        annotate(std=StdDev('evalassignment__grade_assignment'),
+                 mean=Avg('evalassignment__grade_assignment'))
     if assignmentype:
         context['assignmentype'] = assignmentype
+        context['assignments'] = assignments
         context['range_grades'] = range(assignmentype.nb_grading)
         return render(request, 'gradapp/detail_assignmentype.html',
                       context)
@@ -688,7 +692,7 @@ def generate_csv_grades(request, pk):
     if assignmentype:
         for assignment in assignmentype.assignment_set.all():
             list_as = [assignment.student.user.username]
-            list_as.append(assignment.evalassignment_set.all().
+            list_as.append(assignment.evalassignment_set.
                            aggregate(Avg('grade_assignment'))
                            ['grade_assignment__avg'])
             for evaluation in assignment.evalassignment_set.all():

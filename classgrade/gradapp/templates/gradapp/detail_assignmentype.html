@@ -68,18 +68,20 @@ Assignment {{ assignmentype.title }}
                         {% for grade in range_grades %}
                             <th><a href="#" data-toggle="tooltip" data-placement="top" title="Left: grade given to the assignment. Right: student agreement with the peer-evaluation."><font color="#000000">Peer-grade {{ grade }}</font></a></th>
                         {% endfor %}
+                        <th>Mean</th>
+                        <th>Std</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {% for assignment in assignmentype.assignment_set.all %}
+                      {% for assignment in assignments %}
                         <tr>
                           <td>{{ assignment.student.user.username }}</td>
                           {% if assignment.document.name == '' %}
-                            <td>Not uploaded yet...</td>
+                            <td><span class="glyphicon glyphicon-time"></td>
                           {% else %}
-                            <td><a href="{{ assignment.document.url }}">{{ assignment.document.name }}</a></td>
+                            <td><a href="{{ assignment.document.url }}"><span class="glyphicon glyphicon-download-alt"></span></a></td>
                           {% endif %}
-                          <td>{{ assignment.date_upload }}</td>
+                          <td>{{ assignment.date_upload| date:"m/d/y H:i" }}</td>
                           {% for evaluation in assignment.evalassignment_set.all %}
                              <td>
 								 {{ evaluation.evaluator.user.username }}<br>
@@ -119,6 +121,8 @@ Assignment {{ assignmentype.title }}
                                  {% endif %}
 
                           {% endfor %}
+                          <td>{{ assignment.mean|floatformat:2 }}</td>
+                          <td>{{ assignment.std|floatformat:2 }}</td>
                         </tr>
                       {% endfor %}
                     </tbody>

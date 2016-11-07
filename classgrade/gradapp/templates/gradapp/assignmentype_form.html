@@ -19,13 +19,13 @@ Assignment
 
 
 <div class="row">
-    <div class="col-lg-12"> 
+    <div class="col-xs-12"> 
         <div class="chart-wrapper">
             <div class="chart-title">
                 <font color="#00BBDE">{{ message }}</font>
             </div>
             <div class="chart-stage">
-                <div class="col-lg-4">
+                <div class="col-xs-4">
                 {% if type_post == 'reset' %}
                    <form action="{% url 'gradapp:reset_assignmentype' assignmentype_id %}" method="post" enctype="multipart/form-data">
                 {% elif type_post == 'create' %}
@@ -41,7 +41,7 @@ Assignment
                        <p><input type="submit" value="Submit" /></p>
                 </form>
                 </div>
-                <div class="col-lg-4">
+                <div class="col-xs-4">
                   {% if type_post == 'modify' %}
                      <a class="btn btn-info" href="{% url 'gradapp:insert_question' assignmentype_id 1 %}">Add a question <span class="glyphicon glyphicon-plus"></span></a><br><br>
                      <a class="btn btn-info" href="{% url 'gradapp:insert_question' assignmentype_id -1 %}">Remove a question <span class="glyphicon glyphicon-minus"></span></a>

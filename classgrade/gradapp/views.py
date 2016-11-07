@@ -688,7 +688,21 @@ def generate_csv_grades(request, pk):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="grades.csv"'
     writer = csv.writer(response)
-    writer.writerow(assignmentype.questions_coeff)
+    # write coefficients as 1st row
+    writer.writerow(['Coeff:'] + assignmentype.questions_coeff)
+    # write global mean and std
+    grade_stat = assignmentype.assignment_set.\
+        aggregate(std=StdDev('evalassignment__grade_assignment'),
+                  mean=Avg('evalassignment__grade_assignment'))
+    writer.writerow(list(grade_stat.items()))
+    # write column names
+    col_names = ['Name', 'Mean']
+    l = [['R%sName' % i_rev, 'R%sGrade' % i_rev] +
+         ['R%sQ%s' % (i_rev, i_ques)
+          for i_ques in range(1, 1 + assignmentype.nb_questions)] +
+         ['R%sFeedback' % i_rev]
+         for i_rev in range(1, 1 + assignmentype.nb_grading)]
+    writer.writerow(col_names + [item for sublist in l for item in sublist])
     if assignmentype:
         for assignment in assignmentype.assignment_set.all():
             list_as = [assignment.student.user.username]

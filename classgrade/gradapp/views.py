@@ -748,8 +748,9 @@ def generate_csv_grades(request, pk):
           for i_ques in range(1, 1 + assignmentype.nb_questions)] +
          ['R%sFeedback' % i_rev]
          for i_rev in range(1, 1 + assignmentype.nb_grading)] +\
-        ['SuperGrader, SuperGrade'] + ['SuperGradeQ%s' % i_ques for i_ques in
-                                       range(1, 1 + assignmentype.nb_questions)]
+        [['SuperGrader', 'SuperGrade']] +\
+        [['SuperGradeQ%s' % i_ques]
+         for i_ques in range(1, 1 + assignmentype.nb_questions)]
     writer.writerow(col_names + [item for sublist in l for item in sublist])
     if assignmentype:
         for assignment in assignmentype.assignment_set.all():

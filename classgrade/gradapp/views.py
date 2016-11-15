@@ -133,8 +133,9 @@ def base_eval_assignment(request, evalassignment, url_action, url_cancel):
                                                             'rows': 10})})
     qs = Evalquestion.objects.filter(evalassignment=evalassignment).\
         order_by('question')
-    if request.method == 'POST' and evalassignment.assignment.\
-            assignmentype.deadline_grading >= timezone.now():
+    if request.method == 'POST' and (evalassignment.assignment.assignmentype.
+                                     deadline_grading >= timezone.now() or
+                                     evalassignment.is_supereval):
         formset = EvalquestionFormSet(request.POST, queryset=qs)
         if formset.is_valid():
             formset.save()
@@ -322,9 +323,8 @@ def download_assignment(request, pk):
     """
     Get assignment to be evaluated
     """
-    student = request.user.student
     evalassignment = Evalassignment.objects.\
-        filter(pk=pk, evaluator=student).first()
+        filter(pk=pk, evaluator=request.user).first()
     if evalassignment:
         filename = 'assign_%s.%s' % (pk, evalassignment.assignment.
                                      document.name.split('.')[-1])

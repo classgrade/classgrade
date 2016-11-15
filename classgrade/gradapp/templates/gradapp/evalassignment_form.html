@@ -26,7 +26,7 @@
                     <p><a class="btn btn-info" href="{% url 'gradapp:download_assignment' evalassignment_id %}">Download the assignment</a></p>
                 </div>
                 <div class="col-lg-8">
-                <form action="{% url 'gradapp:eval_assignment' evalassignment_id %}" method="post" enctype="multipart/form-data">
+                    <form action="{{ url_action }}" method="post" enctype="multipart/form-data">
                        {% csrf_token %}
                        {{ formset.management_form }}
                        <table>
@@ -38,7 +38,7 @@
                        </table>
                        <p><input type="submit" value="Submit"></p>
                 </form>
-                <p><a class="btn btn-primary" href="{% url 'gradapp:dashboard_student' %}">Cancel</a></p>
+                <p><a class="btn btn-primary" href="{{ url_cancel }}">Cancel</a></p>
                 </div>
             </div> 
         </div>

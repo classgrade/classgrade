@@ -39,6 +39,8 @@ urlpatterns = [
     url(r'^create_assignmentype_students/$',
         views.create_assignmentype_students,
         name='create_assignmentype_students'),
+    url(r'^supereval_assignment/(?P<assignment_pk>[0-9]+)/$',
+        views.supereval_assignment, name='supereval_assignment'),
     # For students
     url(r'^dashboard_student/$', views.dashboard_student,
         name='dashboard_student'),

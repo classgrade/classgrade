@@ -117,6 +117,55 @@ def is_evaluated(evalassignment):
             return -20
 
 
+def base_eval_assignment(request, evalassignment, url_action, url_cancel):
+    """
+    Generate/Postprocess a form to evaluate an assigment
+    """
+    error = ''
+    EvalquestionFormSet =\
+        modelformset_factory(Evalquestion, extra=0,
+                             fields=['grade', 'comments'],
+                             widgets={'grade':
+                                      forms.NumberInput(attrs={'min': 0,
+                                                               'max': 2}),
+                                      'comments':
+                                      forms.Textarea(attrs={'cols': 80,
+                                                            'rows': 10})})
+    qs = Evalquestion.objects.filter(evalassignment=evalassignment).\
+        order_by('question')
+    if request.method == 'POST' and evalassignment.assignment.\
+            assignmentype.deadline_grading >= timezone.now():
+        formset = EvalquestionFormSet(request.POST, queryset=qs)
+        if formset.is_valid():
+            formset.save()
+            # if evaluation is modified, evaluation grade is reset
+            evalassignment.grade_evaluation = 0
+            evalassignment.is_questions_graded =\
+                (None not in [q.grade for q
+                              in evalassignment.evalquestion_set.all()])
+            evalassignment.save()
+            # set evalassignment.grade_assignment if question coeff exist
+            log = tasks.compute_grade_evalassignment(evalassignment.id)
+            logger.error(log)
+            return None
+    else:
+        formset = EvalquestionFormSet(queryset=qs)
+        if evalassignment.assignment.assignmentype.\
+                deadline_grading < timezone.now():
+            error = 'Too late to grade or to modify your grading...'
+    context = {'formset': formset,
+               'title': evalassignment.assignment.assignmentype.title,
+               'description': evalassignment.assignment.
+               assignmentype.description,
+               'evalassignment_id': evalassignment.id,
+               'deadline': evalassignment.assignment.assignmentype.
+               deadline_grading,
+               'error': error,
+               'url_action': url_action,
+               'url_cancel': url_cancel}
+    return context
+
+
 def index(request):
     if request.user.is_authenticated:
         try:
@@ -153,7 +202,7 @@ def dashboard_student(request):
             todo = 1  # resubmit
         # get assignments to be evaluated by the student
         to_be_evaluated = Evalassignment.objects.\
-            filter(evaluator=student,
+            filter(evaluator=student.user,
                    assignment__assignmentype=assignment.assignmentype).\
             order_by('pk')
         to_be_evaluated = [(i, is_evaluated(evalassignment),
@@ -161,15 +210,18 @@ def dashboard_student(request):
                            enumerate(to_be_evaluated)]
         # get evaluations given to the student assignment
         if assignment.assignmentype.deadline_grading < timezone.now():
-            evaluations = [(e.id, e.is_questions_graded,
+            if assignment.get_super_eval():
+                full_evaluations = [assignment.get_super_eval()]
+            else:
+                full_evaluations = assignment.get_normal_eval().order_by('pk')
+            evaluations = [(e.id, e.is_questions_graded, e.is_supereval,
                             e.grade_evaluation, e.grade_assignment,
                             [(qq.question, qq.grade, qq.comments)
                              for qq in e.evalquestion_set.all().
                              order_by('question')])
-                           for e in
-                           assignment.evalassignment_set.all().order_by('pk')]
+                           for e in full_evaluations]
         else:
-            evaluations = [(None, None, None, None, None)] * assignment.\
+            evaluations = [(None, None, None, None, None, None)] * assignment.\
                 assignmentype.nb_grading
         list_assignments.append([assignment.assignmentype.title,
                                  assignment.assignmentype.description,
@@ -213,54 +265,19 @@ def eval_assignment(request, pk):
     """
     Evaluate the assignment (Evalassignment(pk=pk))
     """
-    student = request.user.student
-    evalassignment = Evalassignment.objects.filter(pk=pk, evaluator=student).\
-        first()
+    evalassignment = Evalassignment.objects.filter(evaluator=request.user,
+                                                   pk=pk).first()
     if evalassignment and evalassignment.assignment.assignmentype.\
             deadline_submission < timezone.now():
         # if evalassignment exists and if it is after the submission deadline
-        error = ''
-        EvalquestionFormSet =\
-            modelformset_factory(Evalquestion, extra=0,
-                                 fields=['grade', 'comments'],
-                                 widgets={'grade':
-                                          forms.NumberInput(attrs={'min': 0,
-                                                                   'max': 2}),
-                                          'comments':
-                                          forms.Textarea(attrs={'cols': 80,
-                                                                'rows': 10})})
-        qs = Evalquestion.objects.filter(evalassignment__id=pk).\
-            order_by('question')
-        if request.method == 'POST' and evalassignment.assignment.\
-                assignmentype.deadline_grading >= timezone.now():
-            formset = EvalquestionFormSet(request.POST, queryset=qs)
-            if formset.is_valid():
-                formset.save()
-                # if evaluation is modified, evaluation grade is reset
-                evalassignment.grade_evaluation = 0
-                evalassignment.is_questions_graded =\
-                    (None not in [q.grade for q
-                                  in evalassignment.evalquestion_set.all()])
-                evalassignment.save()
-                # set evalassignment.grade_assignment if question coeff exist
-                log = tasks.compute_grade_evalassignment(evalassignment.id)
-                logger.error(log)
-                return redirect('/dashboard_student/#assignment%s' %
-                                evalassignment.assignment.id)
+        context = base_eval_assignment(
+            request, evalassignment,
+            '/eval_assignment/%s/' % evalassignment.id, '/dashboard_student/')
+        if context:
+            return render(request, 'gradapp/evalassignment_form.html', context)
         else:
-            formset = EvalquestionFormSet(queryset=qs)
-            if evalassignment.assignment.assignmentype.\
-                    deadline_grading < timezone.now():
-                error = 'Too late to grade or to modify your grading...'
-        context = {'formset': formset,
-                   'title': evalassignment.assignment.assignmentype.title,
-                   'description': evalassignment.assignment.
-                   assignmentype.description,
-                   'evalassignment_id': evalassignment.id,
-                   'deadline': evalassignment.assignment.assignmentype.
-                   deadline_grading,
-                   'error': error}
-        return render(request, 'gradapp/evalassignment_form.html', context)
+            return redirect('/dashboard_student/#assignment%s' %
+                            evalassignment.assignment.id)
     else:
         # if evalassignment does not exist or before submission deadline
         if evalassignment:
@@ -268,6 +285,35 @@ def eval_assignment(request, pk):
         else:
             redirect_item = ''
         return redirect('/dashboard_student/' + redirect_item)
+
+
+@login_required
+@login_prof
+def supereval_assignment(request, assignment_pk):
+    """
+    Evaluate the assignment (pk=assignment_pk) and makes your evaluation a
+    superevaluation
+    """
+    assignment = Assignment.objects.get(id=assignment_pk)
+    evalassignment = Evalassignment.objects.filter(assignment=assignment,
+                                                   is_supereval=True).first()
+    redirect_url = ('/detail_assignmentype/%s/#assignment_%s' %
+                    (assignment.assignmentype.id, assignment.id))
+    if not evalassignment:
+        evalassignment = Evalassignment(evaluator=request.user,
+                                        assignment=assignment)
+        evalassignment.is_supereval = True
+        evalassignment.save()
+        for iq in range(assignment.assignmentype.nb_questions):
+            Evalquestion.objects.create(evalassignment=evalassignment,
+                                        question=(iq + 1))
+    context = base_eval_assignment(request, evalassignment,
+                                   '/supereval_assignment/%s/' % assignment_pk,
+                                   redirect_url)
+    if context:
+        return render(request, 'gradapp/evalassignment_form.html', context)
+    else:
+        return redirect(redirect_url)
 
 
 @login_required
@@ -701,21 +747,35 @@ def generate_csv_grades(request, pk):
          ['R%sQ%s' % (i_rev, i_ques)
           for i_ques in range(1, 1 + assignmentype.nb_questions)] +
          ['R%sFeedback' % i_rev]
-         for i_rev in range(1, 1 + assignmentype.nb_grading)]
+         for i_rev in range(1, 1 + assignmentype.nb_grading)] +\
+        ['SuperGrader, SuperGrade'] + ['SuperGradeQ%s' % i_ques for i_ques in
+                                       range(1, 1 + assignmentype.nb_questions)]
     writer.writerow(col_names + [item for sublist in l for item in sublist])
     if assignmentype:
         for assignment in assignmentype.assignment_set.all():
             list_as = [assignment.student.user.username]
-            list_as.append(assignment.evalassignment_set.
-                           aggregate(Avg('grade_assignment'))
-                           ['grade_assignment__avg'])
-            for evaluation in assignment.evalassignment_set.all():
+            if assignment.get_super_eval():
+                mean_grade = assignment.get_super_eval().grade_assignment
+            else:
+                mean_grade = assignment.evalassignment_set.\
+                    aggregate(Avg('grade_assignment'))['grade_assignment__avg']
+            list_as.append(mean_grade)
+            for evaluation in assignment.get_normal_eval():
                 list_grades = [eq.grade for eq in evaluation.
-                               evalquestion_set.all().order_by('question')]
-                list_evaluation = [evaluation.evaluator.user.username,
+                               order_question_set()]
+                list_evaluation = [evaluation.evaluator.username,
                                    evaluation.grade_assignment] + list_grades +\
                                   [evaluation.grade_evaluation]
                 list_as.extend(list_evaluation)
+            supereval = assignment.get_super_eval()
+            if supereval:
+                list_supereval = [supereval.evaluator.username,
+                                  supereval.grade_assignment] +\
+                                 [eq.grade
+                                  for eq in supereval.order_question_set()]
+            else:
+                list_supereval = [None] * (assignmentype.nb_questions + 2)
+            list_as.extend(list_supereval)
             writer.writerow(list_as)
     else:
         writer.writerow(['Oups... you might not be a prof or this assignment '

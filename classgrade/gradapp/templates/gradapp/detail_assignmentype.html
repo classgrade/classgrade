@@ -70,21 +70,22 @@ Assignment {{ assignmentype.title }}
                         {% endfor %}
                         <th>Mean</th>
                         <th>Std</th>
+                        <th>Grade</th>
                       </tr>
                     </thead>
                     <tbody>
                       {% for assignment in assignments %}
                         <tr>
-                          <td>{{ assignment.student.user.username }}</td>
+                            <td id="assignment_{{ assignment.pk }}">{{ assignment.student.user.username }}</td>
                           {% if assignment.document.name == '' %}
                             <td><span class="glyphicon glyphicon-time"></td>
                           {% else %}
                             <td><a href="{{ assignment.document.url }}"><span class="glyphicon glyphicon-download-alt"></span></a></td>
                           {% endif %}
                           <td>{{ assignment.date_upload| date:"m/d/y H:i" }}</td>
-                          {% for evaluation in assignment.evalassignment_set.all %}
+                          {% for evaluation in assignment.get_normal_eval %}
                              <td>
-								 {{ evaluation.evaluator.user.username }}<br>
+								 {{ evaluation.evaluator.username }}<br>
                                  {% if evaluation.is_questions_graded %}
                                  <button type="button" class={% if not evaluation.grade_evaluation %}"btn btn-info"{% elif evaluation.grade_evaluation == -1 %}"btn btn-warning"{% elif evaluation.grade_evaluation == -1 %}"btn btn-warning"{% else %}"btn btn-primary"{% endif %} data-toggle="modal" data-target="#comments{{ evaluation.id }}">{% if evaluation.grade_assignment %}{{ evaluation.grade_assignment}}{% else %}<span class="glyphicon glyphicon-eye-open"></span>{% endif %}</button>
                                       <!-- Modal -->
@@ -121,8 +122,40 @@ Assignment {{ assignmentype.title }}
                                  {% endif %}
 
                           {% endfor %}
-                          <td>{{ assignment.mean|floatformat:2 }}</td>
-                          <td>{{ assignment.std|floatformat:2 }}</td>
+                          {% if assignment.get_super_eval %}
+                            <td>
+                                <center>
+                                  Supereval<br>
+                                  <button type="button" class="btn btn-default" data-toggle="modal" data-target="#super_comments">{{ assignment.get_super_eval.grade_assignment }}</button>
+                                </center> 
+                                     <!-- Modal -->
+                                      <div class="modal fade" id="super_comments" role="dialog">
+                                        <div class="modal-dialog">
+                                          <!-- Modal content-->
+                                          <div class="modal-content">
+                                            <div class="modal-header">
+                                              <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                              <h4 class="modal-title">Evaluation comments &nbsp; &nbsp; &nbsp; &nbsp; {{ assignment.get_super_eval.grade_assignment }}</h4>
+                                            </div>
+                                            <div class="modal-body">
+                                              <p>{% for question in assignment.get_super_eval.order_question_set %}
+                                              <b>Question {{ question.question }}: {{ question.grade }}/2</b><br>
+                                            {{ question.comments|markdownify|safe }}
+                                              {% endfor %}</p>
+                                            </div>
+                                            <div class="modal-footer">
+                                              <a class="btn btn-primary" href="{% url 'gradapp:generate_txt_comments' assignment.get_super_eval.id %}">Get comments in a txt file <span class="glyphicon glyphicon-download"></span></a><button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                            </div>
+                                          </div>
+                                          
+                                        </div>
+                                      </div>
+                            <td></td>
+                          {% else %}
+                            <td><br><button type="button" class="btn btn-default">{{ assignment.mean|floatformat:2 }}</button></td>
+                            <td><br><button type="button" class="btn btn-default">{{ assignment.std|floatformat:2 }}</button></td>
+                          {% endif %}
+                          <td><a class="btn btn-primary" href="{% url 'gradapp:supereval_assignment' assignment.id %}"><span class="glyphicon glyphicon-pencil"></span></a></td>
                         </tr>
                       {% endfor %}
                     </tbody>

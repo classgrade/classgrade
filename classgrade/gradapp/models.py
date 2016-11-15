@@ -108,6 +108,12 @@ class Assignment(models.Model):
                                 upload_to=assignment_directory_path)
     date_upload = models.DateTimeField(auto_now=True)
 
+    def get_normal_eval(self):
+        return self.evalassignment_set.filter(is_supereval=False)
+
+    def get_super_eval(self):
+        return self.evalassignment_set.filter(is_supereval=True).first()
+
     def __str__(self):
         return 'Assignment(id {}, type {},  student {})'.\
             format(self.id, self.assignmentype.id, self.student.user.username)
@@ -159,7 +165,7 @@ class Evalassignment(models.Model):
 
     def __str__(self):
         return 'Evalassignment(id {}, assignment {},  evaluator {})'.\
-            format(self.id, self.assignment.id, self.evaluator.user.username)
+            format(self.id, self.assignment.id, self.evaluator.username)
 
 
 class Evalquestion(models.Model):

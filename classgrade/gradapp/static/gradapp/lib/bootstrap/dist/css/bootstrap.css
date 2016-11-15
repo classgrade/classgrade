@@ -4471,11 +4471,11 @@ a.label:focus {
   background-color: #5e5e5e;
 }
 .label-primary {
-  background-color: #428bca;
+  background-color: #00BBDE;
 }
 .label-primary[href]:hover,
 .label-primary[href]:focus {
-  background-color: #3071a9;
+  background-color: #B3EBF5;
 }
 .label-success {
   background-color: #5cb85c;
@@ -4485,25 +4485,25 @@ a.label:focus {
   background-color: #449d44;
 }
 .label-info {
-  background-color: #5bc0de;
+  background-color: #EEB058;
 }
 .label-info[href]:hover,
 .label-info[href]:focus {
-  background-color: #31b0d5;
+  background-color: #FAE8CD;
 }
 .label-warning {
-  background-color: #f0ad4e;
+  background-color: #FE6672;
 }
 .label-warning[href]:hover,
 .label-warning[href]:focus {
-  background-color: #ec971f;
+  background-color: #FE808A;
 }
 .label-danger {
-  background-color: #d9534f;
+  background-color: #8A8AD6;
 }
 .label-danger[href]:hover,
 .label-danger[href]:focus {
-  background-color: #c9302c;
+  background-color: #DCDCF3;
 }
 .badge {
   display: inline-block;

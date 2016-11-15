@@ -72,7 +72,7 @@ Hi {{ student_name }}!
                                               <button type="button" class="close" data-dismiss="modal">&times;</button>
                                               <h4 class="modal-title">Evaluation comments &nbsp; &nbsp; &nbsp; &nbsp; {{ grade_assignment }}  &nbsp; &nbsp;
                                                   {% if isupereval %}
-                                                    <button type="button" class="btn btn-info">Evaluated by your prof</button>
+                                                    <span class="label label-info">Evaluated by your professor</span>
                                                   {% else %}
                                                     <a class={% if grade_evaluation == -1 %}"btn btn-danger"{% else %}"btn btn-default"{% endif %} href="{% url 'gradapp:eval_evalassignment' ieval -1 %}" data-toggle="tooltip" data-placement="top" title="I disagree with this evaluation"><span class="glyphicon glyphicon-thumbs-down"></span></a> 
 										            <a class={% if grade_evaluation == 1 %}"btn btn-danger"{% else %}"btn btn-default"{% endif %} href="{% url 'gradapp:eval_evalassignment' ieval 1 %}"data-toggle="tooltip" data-placement="top" title="I agree with this evaluation"><span class="glyphicon glyphicon-thumbs-up"></span></a>

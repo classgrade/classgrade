@@ -318,7 +318,6 @@ def supereval_assignment(request, assignment_pk):
 
 
 @login_required
-@login_student
 def download_assignment(request, pk):
     """
     Get assignment to be evaluated

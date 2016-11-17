@@ -126,10 +126,10 @@ Assignment {{ assignmentype.title }}
                             <td>
                                 <center>
                                   Supereval<br>
-                                  <button type="button" class="btn btn-default" data-toggle="modal" data-target="#super_comments">{{ assignment.get_super_eval.grade_assignment }}</button>
+                                  <button type="button" class="btn btn-default" data-toggle="modal" data-target="#super_comments{{ assignment.get_super_eval.id }}">{{ assignment.get_super_eval.grade_assignment }}</button>
                                 </center> 
                                      <!-- Modal -->
-                                      <div class="modal fade" id="super_comments" role="dialog">
+                                     <div class="modal fade" id="super_comments{{ assignment.get_super_eval.id }}" role="dialog">
                                         <div class="modal-dialog">
                                           <!-- Modal content-->
                                           <div class="modal-content">

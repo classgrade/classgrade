@@ -24,7 +24,8 @@ def create_evalassignment(assignmentype_title):
                     return 'Oups... too few students compare to the number'\
                         'of assignment each student must evaluate'
                 e = Evalassignment.objects.create(assignment=to_be_evaluated,
-                                                  evaluator=assignment.student)
+                                                  evaluator=assignment.student.
+                                                  user)
                 for iq in range(nb_questions):
                     Evalquestion.objects.create(evalassignment=e,
                                                 question=(iq + 1))

@@ -23,7 +23,7 @@ urlpatterns = [
         name='create_assignmentype'),
     url(r'^archive_assignmentype/(?P<pk>[0-9]+)/$',
         views.archive_assignmentype, name='archive_assignmentype'),
-    url(r'^delete_assignmentype/(?P<pk>[0-9]+)/(?P<type_list>[0-1]+)$',
+    url(r'^delete_assignmentype/(?P<pk>[0-9]+)/(?P<type_list>[0-1]+)/$',
         views.delete_assignmentype, name='delete_assignmentype'),
     url(r'^reset_assignmentype/(?P<assignmentype_id>[0-9]+)/$',
         views.create_assignmentype, name='reset_assignmentype'),

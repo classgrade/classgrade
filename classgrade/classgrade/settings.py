@@ -85,7 +85,7 @@ DATABASES = {
         'USER': os.environ.get('CG_DATABASE_USER'),
         'PASSWORD': os.environ.get('CG_DATABASE_PASSWORD'),
         'HOST': 'localhost',
-        'PORT': '5433',
+        'PORT': '5432',
     }
 }
 
@@ -136,7 +136,7 @@ MEDIA_URL = "/media/"
 # Email
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
-EMAIL_HOST_USER = 'classgrade.noreply@gmail.com'
+EMAIL_HOST_USER = os.environ.get('CG_EMAIL')
 EMAIL_HOST_PASSWORD = os.environ.get('CG_EMAIL_PASSWORD')
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

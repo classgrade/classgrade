@@ -592,7 +592,11 @@ def create_assignmentype_students(request):
             u = User.objects.create_user(st[0], st[1], password)
             student = Student.objects.create(user=u)
             # Send email
-            tasks.email_new_student(u.email, u.username, password)
+            try:
+                tasks.email_new_student(u.email, u.username, password)
+            except Exception as e:
+                logger.error('Not possible to email new student %s: %s' %
+                             (u.username, make_error_message(e)))
             # Create the assignment
             Assignment.objects.create(student=student,
                                       assignmentype=assignmentype)

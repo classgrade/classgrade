@@ -7,6 +7,7 @@ django-password-reset==0.9
 html5lib==0.9999999
 Markdown==2.6.7
 oauthlib==2.0.0
+pandas==0.19.2
 psycopg2==2.6.2
 python-openid==2.2.5
 pytz==2016.6.1

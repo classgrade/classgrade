@@ -45,7 +45,7 @@ class Assignmentype(models.Model):
     """
     :param title: assignment title
     :param description: assignment description
-    :param nb_graders: number of graders
+    :param nb_grading: number of graders
     :param nb_questions: number of questions in assignment
     :param questions_coeff: coefficient of each question
     :param file_type: file type that can be submitted (e.g. ipynb)

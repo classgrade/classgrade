@@ -1,7 +1,19 @@
+import pandas as pd
+from unidecode import unidecode
 from django.urls import reverse
 from django.test import TestCase
 from django.contrib.auth.models import User
-from gradapp.models import Student, Prof, Assignmentype
+from gradapp.models import Student, Prof, Assignmentype, Assignment
+
+
+file_students = 'test_files/list_students.csv'
+list_students = pd.read_csv(file_students, header=None)
+username_test_student = '%s_%s' % (list_students.values[0],
+                                   list_students.values[1])
+pwd_test_student = 'top_secret'
+test_assignment_title = 'Test'
+username_prof = 'super_prof'
+pwd_prof = 'tip_top'
 
 
 def create_assignmentype(prof, title='Test', description='test',  nb_grading=3,
@@ -31,24 +43,75 @@ class LoginViewTests(TestCase):
         self.assertEqual(response.status_code, 302)  # 302: redirection
 
 
+class ProfViewTests(TestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        # Create prof and log in
+        cls.user_prof = User.objects.create_user(
+            username=username_prof, email='prof@toto.com', password=pwd_prof)
+        cls.prof = Prof.objects.create(user=cls.user_prof)
+
+
+    def test_create_assignmentype(self):
+        self.client.login(username=username_prof, password=pwd_prof)
+        with open(file_students) as fs:
+            dict_post = {'title': test_assignment_title, 'description': 'test',
+                         'nb_grading': 2, 'nb_questions': 3,
+                         'file_type': 'ipynb',
+                         'deadline_submission': '2020-02-02 22:59:30',
+                         'deadline_grading': '2020-02-12 22:59:30',
+                         'list_students': fs}
+            response = self.client.post(reverse('gradapp:create_assignmentype'),
+                                        dict_post)
+        # Check it is redirected to validate_assignmentype_students
+        self.assertEqual(response.status_code, 302)
+        # Send validation to create students
+        self.client.get(reverse('gradapp:create_assignmentype_students'))
+        # Check Assignmentype has been created
+        self.assignmentype = Assignmentype.objects.\
+            filter(title=test_assignment_title).first()
+        self.assertIsNotNone(self.assignmentype)
+        # Check students and their assignments are created
+        list_students = pd.read_csv(file_students, header=None)
+        for student in list_students.values:
+            row = [unidecode(x.strip()) for x in student[:3]]
+            username_student = "_".join(row[:2])
+            username_student = username_student.replace(" ", "_")
+            u_st = User.objects.filter(username=username_student).first()
+            self.assertIsNotNone(u_st)
+            self.assertTrue(hasattr(u_st, 'student'))
+            assignment = Assignment.objects.filter(
+                assignmentype=self.assignmentype,
+                student = u_st.student).first()
+            self.assertIsNotNone(assignment)
+
+
 class StudentViewTests(TestCase):
 
-    def setUp(self):
+    @classmethod
+    def setUpTestData(cls):
         # Create student and log in
-        self.user = User.objects.create_user(
-            username='babar_ya', email='ya@toto.com', password='top_secret')
-        self.student = Student.objects.create(user=self.user)
-        self.client.login(username='babar_ya', password='top_secret')
-        # Create prod and create an assignment
+        cls.user = User.objects.create_user(
+            username=username_test_student, email='ya@toto.com',
+            password=pwd_test_student)
+        cls.student = Student.objects.create(user=cls.user)
+        # Create prof and create an assignment
         u_prof = User.objects.create_user(
-            username='tata', email='tata@...', password='tip_secret')
-        self.prof = Prof.objects.create(user=u_prof)
-        self.assignmentype = create_assignmentype(self.prof)
+            username=username_prof, email='tata@...', password=pwd_prof)
+        cls.prof = Prof.objects.create(user=u_prof)
+        cls.assignmentype = create_assignmentype(cls.prof)
+
+    def setUp(self):
+        self.client.login(username=username_test_student,
+                          password=pwd_test_student)
 
     def test_dashboard_student_view(self):
         """
         No error when getting the page if student
         """
+        self.client.login(username=username_test_student,
+                          password=pwd_test_student)
         response = self.client.get(reverse('gradapp:dashboard_student'))
         self.assertEqual(response.status_code, 200)
 
@@ -57,6 +120,8 @@ class StudentViewTests(TestCase):
         """
         No access for a student to pages for professors
         """
+        self.client.login(username=username_test_student,
+                          password=pwd_test_student)
         a_id = self.assignmentype.id
         list_prof_views = ['list_assignmentypes_running/',
                            'list_assignmentypes_archived/',

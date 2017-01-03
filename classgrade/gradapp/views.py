@@ -248,6 +248,18 @@ def upload_assignment(request, pk):
                                   instance=assignment)
             if form.is_valid():
                 form.save()
+                # Send confirmation email to student
+                assignmentype_title = assignment.assignmentype.title
+                try:
+                    tasks.email_confirm_upload_assignment(
+                        student.user.email, assignmentype_title,
+                        request.FILES['document'].name,
+                        assignment.assignmentype.deadline_submission)
+                except Exception as e:
+                    logger.error('Not possible to send confirmation email to '
+                                 '%s for assignment %s: %s' %
+                                 (student.user.username, assignmentype_title,
+                                  make_error_message(e)))
                 return redirect('gradapp:dashboard_student')
         else:
             form = AssignmentForm(instance=assignment)

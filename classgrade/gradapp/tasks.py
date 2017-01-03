@@ -43,14 +43,28 @@ def email_new_student(student_email, student_login, student_password):
     message = (u'Bonjour et bienvenu sur Peergrade Telecom.\n\n'
                u'Pour vous connecter à Peergrade Telecom, votre login et votre '
                u'mot de passe sont:\n    %s\n    %s\nPour plus de sécurité, '
-               u'modifier votre mot de passe:%s\n\nAdresse du site:%s'
-               u' Bon travail,\n'
-               u" L' équipe enseignante." %
+               u'modifier votre mot de passe:%s\n\nAdresse du site:%s\n'
+               u'Bon travail,\n'
+               u"L'équipe enseignante." %
                (student_login, student_password,
                 settings.SITE_URL + 'accounts-reset/recover/',
                 settings.SITE_URL))
     send_mail(subject, message, settings.EMAIL_HOST_USER,
               [student_email], fail_silently=False)
+
+
+def email_confirm_upload_assignment(student_email, assignmentype_title,
+                                    assignment_filename, deadline_submission):
+    """
+    Send an email when student uploads a new assignment file
+    """
+    subject = u'%s: Votre devoir a bien été soumis' % assignmentype_title
+    message = (u'Bien reçu votre devoir %s.\nSi vous le souhaitez, '
+               u"vous pouvez resoumettre une nouvelle version jusqu'au %s.\n\n"
+               u"Bonne journée,\nL'équipe enseignante" %
+               (assignment_filename, deadline_submission))
+    send_mail(subject, message, settings.EMAIL_HOST_USER,
+               [student_email], fail_silently=False)
 
 
 def compute_grades_assignmentype(assignmentype_id):

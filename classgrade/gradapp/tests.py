@@ -16,7 +16,8 @@ username_prof = 'super_prof'
 pwd_prof = 'tip_top'
 
 
-def create_assignmentype(prof, title='Test', description='test',  nb_grading=3,
+def create_assignmentype(prof, title=test_assignment_title, description='test',
+                         nb_grading=2,
                          deadline_submission='2020-02-02 22:59:30+00:00',
                          deadline_grading='2020-02-12 22:59:30+00:00',
                          nb_questions=3, questions_coeff=[2, 1, 1],
@@ -51,12 +52,16 @@ class ProfViewTests(TestCase):
         cls.user_prof = User.objects.create_user(
             username=username_prof, email='prof@toto.com', password=pwd_prof)
         cls.prof = Prof.objects.create(user=cls.user_prof)
+        cls.assignmentype = create_assignmentype(cls.prof,
+                                                 title=test_assignment_title)
 
+    def setUp(self):
+        self.client.login(username=username_prof, password=pwd_prof)
 
     def test_create_assignmentype(self):
-        self.client.login(username=username_prof, password=pwd_prof)
+        test_title = 'test create'
         with open(file_students) as fs:
-            dict_post = {'title': test_assignment_title, 'description': 'test',
+            dict_post = {'title': test_title, 'description': 'test',
                          'nb_grading': 2, 'nb_questions': 3,
                          'file_type': 'ipynb',
                          'deadline_submission': '2020-02-02 22:59:30',
@@ -69,9 +74,9 @@ class ProfViewTests(TestCase):
         # Send validation to create students
         self.client.get(reverse('gradapp:create_assignmentype_students'))
         # Check Assignmentype has been created
-        self.assignmentype = Assignmentype.objects.\
-            filter(title=test_assignment_title).first()
-        self.assertIsNotNone(self.assignmentype)
+        assignmentype = Assignmentype.objects.\
+            filter(title=test_title).first()
+        self.assertIsNotNone(assignmentype)
         # Check students and their assignments are created
         list_students = pd.read_csv(file_students, header=None)
         for student in list_students.values:
@@ -82,10 +87,24 @@ class ProfViewTests(TestCase):
             self.assertIsNotNone(u_st)
             self.assertTrue(hasattr(u_st, 'student'))
             assignment = Assignment.objects.filter(
-                assignmentype=self.assignmentype,
+                assignmentype=assignmentype,
                 student = u_st.student).first()
             self.assertIsNotNone(assignment)
 
+
+    def test_insert_question(self):
+        for cd in [-1, 1]:
+            assignmentype = Assignmentype.objects.get(id=self.assignmentype.id)
+            nb_questions = assignmentype.nb_questions
+            response = self.client.post(
+                '/insert_question_assignmentype/%s/%s/' %
+                (self.assignmentype.id, cd), {'question': 1})
+            self.assertEqual(response.status_code, 302)
+            assignmentype = Assignmentype.objects.get(id=self.assignmentype.id)
+            self.assertEqual(nb_questions + cd, assignmentype.nb_questions)
+
+
+    # TODO: test coeff
 
 class StudentViewTests(TestCase):
 
@@ -110,8 +129,6 @@ class StudentViewTests(TestCase):
         """
         No error when getting the page if student
         """
-        self.client.login(username=username_test_student,
-                          password=pwd_test_student)
         response = self.client.get(reverse('gradapp:dashboard_student'))
         self.assertEqual(response.status_code, 200)
 
@@ -120,8 +137,6 @@ class StudentViewTests(TestCase):
         """
         No access for a student to pages for professors
         """
-        self.client.login(username=username_test_student,
-                          password=pwd_test_student)
         a_id = self.assignmentype.id
         list_prof_views = ['list_assignmentypes_running/',
                            'list_assignmentypes_archived/',
@@ -144,3 +159,4 @@ class StudentViewTests(TestCase):
             response = self.client.get(('/%s' % prof_view))
             self.assertEqual(response.status_code, 302)
 
+    # TODO: test submit, grade, get eval

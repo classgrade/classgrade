@@ -80,7 +80,7 @@ Assignment {{ assignmentype.title }}
                           {% if assignment.document.name == '' %}
                             <td><span class="glyphicon glyphicon-time"></td>
                           {% else %}
-                            <td><a href="{{ assignment.document.url }}"><span class="glyphicon glyphicon-download-alt"></span></a></td>
+                            <td><a href="{% url 'gradapp:download_assignment_prof' assignment.id %}"><span class="glyphicon glyphicon-download-alt"></span></a></td>
                           {% endif %}
                           <td>{{ assignment.date_upload| date:"m/d/y H:i" }}</td>
                           {% for evaluation in assignment.get_normal_eval %}

@@ -330,9 +330,28 @@ def supereval_assignment(request, assignment_pk):
 
 
 @login_required
-def download_assignment(request, pk):
+@login_prof
+def download_assignment_prof(request, pk):
     """
-    Get assignment to be evaluated
+    Get assignment for a prof
+    """
+    assignment = Assignment.objects.\
+        filter(pk=pk, assignmentype__prof__user=request.user).first()
+    if assignment:
+        filename = 'assign_%s.%s' % (assignment.student.user.username,
+                                     assignment.document.name.split('.')[-1])
+        response = HttpResponse(assignment.document,
+                                content_type='application/force_download')
+        response['Content-Disposition'] = 'attachment; filename=%s' % filename
+        return response
+    else:
+        return redirect('gradapp:list_assignmentypes_running')
+
+
+@login_required
+def download_assignment_student(request, pk):
+    """
+    Get assignment to be evaluated by student
     """
     evalassignment = Evalassignment.objects.\
         filter(pk=pk, evaluator=request.user).first()

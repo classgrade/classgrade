@@ -41,6 +41,8 @@ urlpatterns = [
         name='create_assignmentype_students'),
     url(r'^supereval_assignment/(?P<assignment_pk>[0-9]+)/$',
         views.supereval_assignment, name='supereval_assignment'),
+    url(r'^download_assignment_prof/(?P<pk>[0-9]+)/$',
+        views.download_assignment_prof, name='download_assignment_prof'),
     # For students
     url(r'^dashboard_student/$', views.dashboard_student,
         name='dashboard_student'),
@@ -50,8 +52,8 @@ urlpatterns = [
         name='get_assignment'),
     url(r'^eval_assignment/(?P<pk>[0-9]+)/$', views.eval_assignment,
         name='eval_assignment'),
-    url(r'^download_assignment/(?P<pk>[0-9]+)/$', views.download_assignment,
-        name='download_assignment'),
+    url(r'^download_assignment_student/(?P<pk>[0-9]+)/$',
+        views.download_assignment_student, name='download_assignment_student'),
     url(r'^eval_evalassignment/(?P<pk>[0-9]+)/(?P<pts>-?[0-1]+)$',
         views.eval_evalassignment, name='eval_evalassignment'),
 ]

@@ -23,7 +23,7 @@
             <div class="chart-stage">
                 <div class="col-lg-4">
                     <p>{{ description|markdownify|safe }}</p>
-                    <p><a class="btn btn-info" href="{% url 'gradapp:download_assignment' evalassignment_id %}">Download the assignment</a></p>
+                    <p><a class="btn btn-info" href="{% url 'gradapp:download_assignment_student' evalassignment_id %}">Download the assignment</a></p>
                 </div>
                 <div class="col-lg-8">
                     <form action="{{ url_action }}" method="post" enctype="multipart/form-data">

@@ -31,8 +31,8 @@
                        {{ formset.management_form }}
                        <table>
                         <tbody>
-                          {% for form in formset %}
-                          <tr> <th>   Question {{ forloop.counter }} {{ form }} </th></tr>
+                          {% for form, question in formset %}
+                          <tr> <th>   Question {{ question }} {{ form }} </th></tr>
                           {% endfor %}
                         </tbody>
                        </table>

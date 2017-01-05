@@ -154,13 +154,13 @@ def base_eval_assignment(request, evalassignment, url_action, url_cancel):
         if evalassignment.assignment.assignmentype.\
                 deadline_grading < timezone.now():
             error = 'Too late to grade or to modify your grading...'
-    context = {'formset': formset,
-               'title': evalassignment.assignment.assignmentype.title,
-               'description': evalassignment.assignment.
-               assignmentype.description,
+    assignmentype = evalassignment.assignment.assignmentype
+    list_questions = [i for i in range(1, assignmentype.nb_questions + 1)]
+    context = {'formset': zip(formset, list_questions),
+               'title': assignmentype.title,
+               'description': assignmentype.description,
                'evalassignment_id': evalassignment.id,
-               'deadline': evalassignment.assignment.assignmentype.
-               deadline_grading,
+               'deadline': assignmentype.deadline_grading,
                'error': error,
                'url_action': url_action,
                'url_cancel': url_cancel}

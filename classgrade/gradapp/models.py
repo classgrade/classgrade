@@ -178,7 +178,7 @@ class Evalquestion(models.Model):
     :type evalassignment: ForeignKey(Evalassignment, on_delete=models.CASCADE)
     :type question: IntegerField
     :type grade: IntegerField(null=True, blank=True, min=0, max=2)
-    :type comments: TextField(max_length=500, default='', blank=True)
+    :type comments: TextField(max_length=500, blank=False)
     """
     evalassignment = models.ForeignKey(Evalassignment,
                                        on_delete=models.CASCADE)
@@ -186,11 +186,11 @@ class Evalquestion(models.Model):
     grade = models.IntegerField(null=True, blank=True, help_text='0, 1, or 2',
                                 validators=[MinValueValidator(0),
                                             MaxValueValidator(2)])
-    comments = models.TextField(max_length=500, default='', blank=True,
+    comments = models.TextField(max_length=500, blank=False,
                                 help_text='Use Markdown')
 
     def __str__(self):
         return 'Evalquest(id {}, evalassign {}, assign {},  evaluator {})'.\
             format(self.id, self.evalassignment.id,
                    self.evalassignment.assignment.id,
-                   self.evalassignment.evaluator.user.username)
+                   self.evalassignment.evaluator.username)

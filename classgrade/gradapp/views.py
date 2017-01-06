@@ -117,7 +117,7 @@ def is_evaluated(evalassignment):
             return -20
 
 
-def base_eval_assignment(request, evalassignment, url_action, url_cancel):
+def base_eval_assignment(request, evalassignment, i, url_action, url_cancel):
     """
     Generate/Postprocess a form to evaluate an assigment
     """
@@ -161,7 +161,11 @@ def base_eval_assignment(request, evalassignment, url_action, url_cancel):
     else:
         list_questions = [i for i in range(1, assignmentype.nb_questions + 1)]
     context = {'formset': zip(formset, list_questions),
+               'formset_management_form': formset.management_form,
                'title': assignmentype.title,
+               'i': i,
+               'evalassignment_name': 'assign_%s_%s' %
+                   (assignmentype.title.replace(" ", ""), i),
                'description': assignmentype.description,
                'evalassignment_id': evalassignment.id,
                'deadline': assignmentype.deadline_grading,
@@ -278,9 +282,10 @@ def upload_assignment(request, pk):
 
 @login_required
 @login_student
-def eval_assignment(request, pk):
+def eval_assignment(request, pk, i):
     """
-    Evaluate the assignment (Evalassignment(pk=pk))
+    Evaluate the assignment (Evalassignment(pk=pk)) seen as
+    eval_<assignmentype_title>_<i>
     """
     evalassignment = Evalassignment.objects.filter(evaluator=request.user,
                                                    pk=pk).first()
@@ -288,8 +293,9 @@ def eval_assignment(request, pk):
             deadline_submission < timezone.now():
         # if evalassignment exists and if it is after the submission deadline
         context = base_eval_assignment(
-            request, evalassignment,
-            '/eval_assignment/%s/' % evalassignment.id, '/dashboard_student/')
+            request, evalassignment, i,
+            '/eval_assignment/%s/%s/' % (evalassignment.id, i),
+            '/dashboard_student/')
         if context:
             return render(request, 'gradapp/evalassignment_form.html', context)
         else:
@@ -306,10 +312,10 @@ def eval_assignment(request, pk):
 
 @login_required
 @login_prof
-def supereval_assignment(request, assignment_pk):
+def supereval_assignment(request, assignment_pk, i):
     """
     Evaluate the assignment (pk=assignment_pk) and makes your evaluation a
-    superevaluation
+    superevaluation. Assignment seen as eval_<assignmentype_title>_<i>
     """
     assignment = Assignment.objects.get(id=assignment_pk)
     evalassignment = Evalassignment.objects.filter(assignment=assignment,
@@ -324,8 +330,9 @@ def supereval_assignment(request, assignment_pk):
         for iq in range(assignment.assignmentype.nb_questions):
             Evalquestion.objects.create(evalassignment=evalassignment,
                                         question=(iq + 1))
-    context = base_eval_assignment(request, evalassignment,
-                                   '/supereval_assignment/%s/' % assignment_pk,
+    context = base_eval_assignment(request, evalassignment, i,
+                                   '/supereval_assignment/%s/%s/' %
+                                   (assignment_pk, i),
                                    redirect_url)
     if context:
         return render(request, 'gradapp/evalassignment_form.html', context)
@@ -353,14 +360,16 @@ def download_assignment_prof(request, pk):
 
 
 @login_required
-def download_assignment_student(request, pk):
+def download_assignment_student(request, pk, i):
     """
     Get assignment to be evaluated by student
     """
     evalassignment = Evalassignment.objects.\
         filter(pk=pk, evaluator=request.user).first()
     if evalassignment:
-        filename = 'assign_%s.%s' % (pk, evalassignment.assignment.
+        eval_name = '%s_%s' % (evalassignment.assignment.assignmentype.title.
+                               replace(" ", ""), i)
+        filename = 'assign_%s.%s' % (eval_name, evalassignment.assignment.
                                      document.name.split('.')[-1])
         response = HttpResponse(evalassignment.assignment.document,
                                 content_type='application/force_download')

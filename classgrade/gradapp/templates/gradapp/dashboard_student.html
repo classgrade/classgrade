@@ -45,13 +45,13 @@ Hi {{ student_name }}!
                                 <center>
                                 {% for i, is_evaluated, evalassignment_id in to_be_evaluated %}
 								   {% if is_evaluated == -30 %}
-                                        <a class="btn btn-primary" href="#"> <span class="glyphicon glyphicon-time"></span></a>
+                                        <a class="btn btn-primary" href="#"> <span class="glyphicon glyphicon-time"> {{ i }}</span></a>
                                    {% elif is_evaluated == -20 %}
-                                        <a class="btn btn-warning" href="{% url 'gradapp:eval_assignment' evalassignment_id %}"> <span class="glyphicon glyphicon-pencil"></span></a>
+                                        <a class="btn btn-warning" href="{% url 'gradapp:eval_assignment' evalassignment_id i %}"> <span class="glyphicon glyphicon-pencil"> {{ i }}</span></a>
                                    {% elif is_evaluated == -10 %}
-                                        <a class="btn btn-info" href="{% url 'gradapp:eval_assignment' evalassignment_id %}"> <span class="glyphicon glyphicon-ok"></span></a>
+                                        <a class="btn btn-info" href="{% url 'gradapp:eval_assignment' evalassignment_id i %}"> <span class="glyphicon glyphicon-ok"> {{ i }}</span></a>
                                    {% else %}
-                                        <a class="btn btn-info" href="{% url 'gradapp:eval_assignment' evalassignment_id %}"> <span class="glyphicon glyphicon-ok">&nbsp;</span><span class={% if is_evaluated == -1 %}"glyphicon glyphicon-thumbs-down"{% elif is_evaluated == 1 %}"glyphicon glyphicon-thumbs-up"{% endif %}></span></a>
+                                        <a class="btn btn-info" href="{% url 'gradapp:eval_assignment' evalassignment_id i %}"> <span class="glyphicon glyphicon-ok">&nbsp;</span><span class={% if is_evaluated == -1 %}"glyphicon glyphicon-thumbs-down"{% elif is_evaluated == 1 %}"glyphicon glyphicon-thumbs-up"{% endif %}> {{ i }}</span></a>
                                    {% endif %}
                                  {% endfor %}
                                  </center>

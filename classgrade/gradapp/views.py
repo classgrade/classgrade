@@ -18,7 +18,7 @@ from xkcdpass import xkcd_password as xp
 from unidecode import unidecode
 from classgrade import settings
 from gradapp.forms import AssignmentypeForm, AssignmentForm
-from gradapp.forms import LightAssignmentypeForm, CoeffForm
+from gradapp.forms import LightAssignmentypeForm, CoeffForm, StatementForm
 from gradapp.forms import AddQuestionForm, RemoveQuestionForm
 from gradapp.models import Assignment, Assignmentype, Student, Evalassignment
 from gradapp.models import Evalquestion
@@ -155,7 +155,11 @@ def base_eval_assignment(request, evalassignment, url_action, url_cancel):
                 deadline_grading < timezone.now():
             error = 'Too late to grade or to modify your grading...'
     assignmentype = evalassignment.assignment.assignmentype
-    list_questions = [i for i in range(1, assignmentype.nb_questions + 1)]
+    if assignmentype.questions_statement:
+        list_questions = [ '%s: %s' % (i + 1, s) for i, s in
+                          enumerate(assignmentype.questions_statement)]
+    else:
+        list_questions = [i for i in range(1, assignmentype.nb_questions + 1)]
     context = {'formset': zip(formset, list_questions),
                'title': assignmentype.title,
                'description': assignmentype.description,
@@ -497,10 +501,15 @@ def insert_question_assignmentype(request, pk, cd):
                 if cd == 1:
                     if assignmentype.questions_coeff:
                         assignmentype.questions_coeff.insert(question - 1, None)
+                    if assignmentype.questions_statement:
+                        assignmentype.questions_statement.insert(question - 1,
+                                                                 None)
                     assignmentype.save()
                 elif cd == -1:
                     if assignmentype.questions_coeff:
                         del assignmentype.questions_coeff[question - 1]
+                    if assignmentype.questions_statement:
+                        del assignmentype.questions_statement[question - 1]
                     assignmentype.save()
                     log = tasks.compute_grades_assignmentype(assignmentype.pk)
                     logger.info(log)
@@ -756,6 +765,46 @@ def coeff_assignmentype(request, pk):
         context['form'] = form
         context['assignmentype'] = assignmentype
         return render(request, 'gradapp/coeff_assignmentype.html',
+                      context)
+    return redirect('gradapp:list_assignmentypes_running')
+
+
+@login_required
+@login_prof
+def statement_assignmentype(request, pk):
+    """
+    Set up problem statements of an assignmentype (id=pk)
+    """
+    prof = request.user.prof
+    context = {'prof': prof}
+    assignmentype = Assignmentype.objects.filter(pk=pk, prof=prof).first()
+    if assignmentype:
+        nb_questions = assignmentype.nb_questions
+        if request.method == 'POST':
+            form = StatementForm(request.POST,
+                                 nb_questions=nb_questions)
+            if form.is_valid():
+                assignmentype.questions_statement =\
+                    [form.cleaned_data['statement_%s' % i]
+                     for i in range(1, assignmentype.nb_questions + 1)]
+                assignmentype.save()
+                return redirect('/detail_assignmentype/%s/' % pk)
+        else:
+            questions_statement = assignmentype.questions_statement
+            statement = {}
+            if questions_statement:
+                for i in range(1, nb_questions + 1):
+                    statement['statement_%s' % i] =\
+                         assignmentype.questions_statement[i - 1]
+            else:
+                statement = dict.fromkeys(['statement_%s' % i
+                                       for i in range(1, nb_questions + 1)],
+                                      None)
+            form = StatementForm(nb_questions=nb_questions,
+                             initial=statement)
+        context['form'] = form
+        context['assignmentype'] = assignmentype
+        return render(request, 'gradapp/statement_assignmentype.html',
                       context)
     return redirect('gradapp:list_assignmentypes_running')
 

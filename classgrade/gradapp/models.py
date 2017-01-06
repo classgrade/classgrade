@@ -48,6 +48,7 @@ class Assignmentype(models.Model):
     :param nb_grading: number of graders
     :param nb_questions: number of questions in assignment
     :param questions_coeff: coefficient of each question
+    :param questions_statement: problem statement of each question
     :param file_type: file type that can be submitted (e.g. ipynb)
     :param deadline_submission: submission deadline
     :param deadline_grading: grading deadline
@@ -60,6 +61,8 @@ class Assignmentype(models.Model):
     :type nb_graders: IntegerField(default=3)
     :type nb_questions: IntegerField(default=1)
     :type questions_coeff: pgfields.ArrayField(models.FloatField(default=1))
+    :type questions_statement: pgfields.ArrayField(
+        models.CharField(max_length=300, default=''))
     :type file_type: CharField(max_length=20)
     :type deadline_submission: TextField(max_length=500)
     :type deadline_grading: TextField(max_length=500)
@@ -79,6 +82,8 @@ class Assignmentype(models.Model):
                                        'in your assignment')
     questions_coeff = pgfields.ArrayField(models.FloatField(default=1),
                                           default=list)
+    questions_statement = pgfields.ArrayField(
+        models.CharField(max_length=300, default=''), default=list)
     prof = models.ForeignKey(Prof)
     list_students = models.FileField(max_length=100, null=True, blank=True,
                                      help_text='csv file, each row contains: '

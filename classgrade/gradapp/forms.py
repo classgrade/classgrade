@@ -8,7 +8,7 @@ class AssignmentypeForm(forms.ModelForm):
 
     class Meta:
         model = Assignmentype
-        exclude = ['prof', 'archived', 'questions_coeff']
+        exclude = ['prof', 'archived', 'questions_coeff', 'questions_statement']
         widgets = {
             'deadline_submission':
             DateTimeWidget(usel10n=True, bootstrap_version=3,
@@ -24,7 +24,7 @@ class LightAssignmentypeForm(forms.ModelForm):
     class Meta:
         model = Assignmentype
         exclude = ['prof', 'archived', 'list_students', 'questions_coeff',
-                   'nb_questions']
+                   'nb_questions', 'questions_statement']
 
 
 class AssignmentForm(forms.ModelForm):
@@ -43,6 +43,18 @@ class CoeffForm(forms.Form):
             self.fields['coeff_%s' % i] = forms.\
                 FloatField(required=True, validators=[MinValueValidator(0)])
             self.fields['coeff_%s' % i].label = 'Q%i' % i
+
+
+class StatementForm(forms.Form):
+
+    def __init__(self, *args, **kwargs):
+        nb_questions = kwargs.pop('nb_questions')
+        super(StatementForm, self).__init__(*args, **kwargs)
+        for i in range(1, nb_questions + 1):
+            self.fields['statement_%s' % i] = forms.CharField(
+                required=True, widget=forms.Textarea(attrs={'rows': '2',
+                                                            'cols': '80'}))
+            self.fields['statement_%s' % i].label = 'Q%i' % i
 
 
 class AddQuestionForm(forms.Form):

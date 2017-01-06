@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% load staticfiles %}
+{% load markdownify %}
+
+{% block title %}
+
+{{ assignmentype.title }}
+
+{% endblock title %}
+
+{% block content %}
+
+
+<div class="row">
+    <div class="col-xs-12"> 
+        <div class="chart-wrapper">
+            <div class="chart-title">
+                Set problem statement for each question 
+            </div>
+            <div class="chart-stage">
+                <form action="{% url 'gradapp:statement_assignmentype' assignmentype.id %}" method="post" enctype="multipart/form-data">
+                       {% csrf_token %}
+                       <div class="row">
+					   {% for field in form %}
+                           <div class="col-xs-12">
+                               {{ field.errors }}
+                               {{ field.label_tag }} {{ field }}
+                           </div>
+                       {% endfor %}
+					   </div>
+                       <div class="row">
+                       <center>
+					   {% if error %}
+                            <b><font color="#FE6672">{{ error }}</font></b>
+                       {% endif %}
+                       <p><input type="submit" value="Submit" /></p>
+					   </center>
+					   </div>
+                </form>
+            </div> 
+        </div>
+    </div>
+</div>
+{% endblock content %}
+

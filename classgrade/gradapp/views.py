@@ -8,19 +8,16 @@ import django.forms as forms
 from django.db.models import F, Avg, StdDev
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
-from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
 from django.utils.decorators import available_attrs
 from django.forms import modelformset_factory
-from xkcdpass import xkcd_password as xp
-from unidecode import unidecode
 from classgrade import settings
 from gradapp.forms import AssignmentypeForm, AssignmentForm
 from gradapp.forms import LightAssignmentypeForm, CoeffForm, StatementForm
 from gradapp.forms import AddQuestionForm, RemoveQuestionForm
-from gradapp.models import Assignment, Assignmentype, Student, Evalassignment
+from gradapp.models import Assignment, Assignmentype, Evalassignment
 from gradapp.models import Evalquestion
 from gradapp import tasks
 
@@ -67,32 +64,6 @@ def make_error_message(e):
         return str(e.traceback)
     else:
         return repr(e)
-
-
-def get_students(csv_file):
-    """
-    :param csv_file: csv file with list of students.\
-        Each row contains: first_name, last_name, email
-    :type csv_file: str
-    :rtype: 2 lists existing_students and new_students [[username, email], ..]
-    """
-
-    with open(csv_file) as ff:
-        reader = csv.reader(ff, delimiter=',')
-        existing_students = []
-        new_students = []
-        for i, row in enumerate(reader):
-            row = [unidecode(x.strip()) for x in row[:3]]
-            username = "_".join(row[:2])
-            username = username.replace(" ", "_")
-            email = row[2]
-            try:
-                u = User.objects.get(username=username)
-                Student.objects.get(user=u)
-                existing_students.append([u.username, u.email])
-            except ObjectDoesNotExist:
-                new_students.append([username, email])
-    return existing_students, new_students
 
 
 def is_evaluated(evalassignment):
@@ -251,7 +222,9 @@ def upload_assignment(request, pk):
     student = request.user.student
     assignment = Assignment.objects.filter(pk=pk, student=student).first()
     if assignment:
-        if request.method == 'POST':
+        error = ''
+        if request.method == 'POST' and assignment.assignmentype.\
+                deadline_submission > timezone.now():
             form = AssignmentForm(request.POST, request.FILES,
                                   instance=assignment)
             if form.is_valid():
@@ -271,10 +244,11 @@ def upload_assignment(request, pk):
                 return redirect('gradapp:dashboard_student')
         else:
             form = AssignmentForm(instance=assignment)
+            error = 'TOO LATE TO SUBMIT!'
         context = {'form': form, 'title': assignment.assignmentype.title,
                    'description': assignment.assignmentype.description,
                    'deadline': assignment.assignmentype.deadline_submission,
-                   'assignment_id': assignment.id}
+                   'assignment_id': assignment.id, 'error': error}
         return render(request, 'gradapp/assignment_form.html', context)
     else:
         return redirect('gradapp:index')
@@ -441,7 +415,7 @@ def create_assignmentype(request, assignmentype_id=None):
                 # get list students from csv file
                 try:
                     existing_students, new_students =\
-                        get_students(new_assignmentype.list_students.path)
+                        tasks.get_students(new_assignmentype.list_students.path)
                     # return page asking for agreement for creation of students
                     request.session['existing_students'] = existing_students
                     request.session['new_students'] = new_students
@@ -624,35 +598,8 @@ def create_assignmentype_students(request):
     new_students = request.session.get('new_students', False)
     assignmentype_pk = request.session.get('assignmentype_pk', False)
     if assignmentype_pk:
-        words = xp.locate_wordfile()
-        mywords = xp.generate_wordlist(wordfile=words, min_length=4,
-                                       max_length=6)
-        assignmentype = Assignmentype.objects.get(id=assignmentype_pk)
-        for assignment in assignmentype.assignment_set.all():
-            assignment.delete()
-        for st in existing_students:
-            student = Student.objects.get(user__username=st[0])
-            # Get an existing assignment or create it
-            Assignment.objects.get_or_create(student=student,
-                                             assignmentype=assignmentype)
-
-        for st in new_students:
-            password = xp.generate_xkcdpassword(mywords, numwords=4)
-            u = User.objects.create_user(st[0], st[1], password)
-            student = Student.objects.create(user=u)
-            # Send email
-            try:
-                tasks.email_new_student(u.email, u.username, password)
-            except Exception as e:
-                logger.error('Not possible to email new student %s: %s' %
-                             (u.username, make_error_message(e)))
-            # Create the assignment
-            Assignment.objects.create(student=student,
-                                      assignmentype=assignmentype)
-        # Create associated Evalassignment
-        # This could be in a new function to separate shuffling from assignment
-        log = tasks.create_evalassignment(assignmentype.title)
-        logger.info(log)
+        tasks.create_assignment(assignmentype_pk,
+                                existing_students, new_students)
         return redirect('/detail_assignmentype/%s/' % assignmentype_pk)
     else:
         # TODO return error message

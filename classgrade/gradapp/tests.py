@@ -1,15 +1,21 @@
+import os
 import pandas as pd
 from unidecode import unidecode
 from django.urls import reverse
 from django.test import TestCase
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.contrib.auth.models import User
 from gradapp.models import Student, Prof, Assignmentype, Assignment
+from gradapp import tasks
 
 
+assignment_file = 'test_files/assignment.ipynb'
 file_students = 'test_files/list_students.csv'
 list_students = pd.read_csv(file_students, header=None)
-username_test_student = '%s_%s' % (list_students.values[0],
-                                   list_students.values[1])
+student = list_students.values[0]
+row = [unidecode(x.strip()) for x in student[:3]]
+username_test_student = "_".join(row[:2])
+username_test_student = username_test_student.replace(" ", "_")
 pwd_test_student = 'top_secret'
 test_assignment_title = 'Test'
 username_prof = 'super_prof'
@@ -21,12 +27,24 @@ def create_assignmentype(prof, title=test_assignment_title, description='test',
                          deadline_submission='2020-02-02 22:59:30+00:00',
                          deadline_grading='2020-02-12 22:59:30+00:00',
                          nb_questions=3, questions_coeff=[2, 1, 1],
-                         list_students='test_files/list_students.csv'):
-    return Assignmentype.objects.create(
+                         list_students=file_students):
+    """
+    Create an assignmentype and associated assignments
+    """
+    fs = SimpleUploadedFile(name='list_students.csv',
+                            content=open(file_students, 'rb').read())
+    assignmentype = Assignmentype.objects.create(
         prof=prof, title=title, description=description,
         nb_grading=nb_grading, deadline_submission=deadline_submission,
         deadline_grading=deadline_grading, nb_questions=nb_questions,
-        questions_coeff=questions_coeff, list_students=list_students)
+        questions_coeff=questions_coeff, list_students=fs)
+    # Get new and existing students, associated to the assignmetype
+    existing_students, new_students = tasks.get_students(assignmentype.
+                                                         list_students.path)
+    # Create their assignment
+    tasks.create_assignment(assignmentype.id, existing_students, new_students)
+    return assignmentype
+
 
 class LoginViewTests(TestCase):
 
@@ -60,7 +78,12 @@ class ProfViewTests(TestCase):
 
     def test_create_assignmentype(self):
         test_title = 'test create'
-        with open(file_students) as fs:
+        # Create a new test student file with an additional student
+        new_file_students = 'temp_students.csv'
+        os.system('cp %s %s' % (file_students, new_file_students))
+        os.system('echo beber, ye, ye@toto.com >> temp_students.csv')
+        # Post to create the assignmentype
+        with open(new_file_students) as fs:
             dict_post = {'title': test_title, 'description': 'test',
                          'nb_grading': 2, 'nb_questions': 3,
                          'file_type': 'ipynb',
@@ -78,7 +101,7 @@ class ProfViewTests(TestCase):
             filter(title=test_title).first()
         self.assertIsNotNone(assignmentype)
         # Check students and their assignments are created
-        list_students = pd.read_csv(file_students, header=None)
+        list_students = pd.read_csv(new_file_students, header=None)
         for student in list_students.values:
             row = [unidecode(x.strip()) for x in student[:3]]
             username_student = "_".join(row[:2])
@@ -90,7 +113,8 @@ class ProfViewTests(TestCase):
                 assignmentype=assignmentype,
                 student = u_st.student).first()
             self.assertIsNotNone(assignment)
-
+        # Remove the new student file
+        os.system('rm %s' % new_file_students)
 
     def test_insert_question(self):
         for cd in [-1, 1]:
@@ -131,7 +155,13 @@ class StudentViewTests(TestCase):
         """
         response = self.client.get(reverse('gradapp:dashboard_student'))
         self.assertEqual(response.status_code, 200)
-
+        # Check that it is possible to submit
+        self.assertContains(response, 'Submit your assignment')
+        # Check it is too late to submit
+        self.assignmentype.deadline_submission = '2002-02-02 22:59:30+00:00'
+        self.assignmentype.save()
+        response = self.client.get(reverse('gradapp:dashboard_student'))
+        self.assertContains(response, 'Too late')
 
     def test_no_access_prof_view(self):
         """
@@ -153,10 +183,37 @@ class StudentViewTests(TestCase):
                            'insert_question_assignmentype/%s/1/' % a_id,
                            'validate_assignmentype_students/',
                            'create_assignmentype_students/',
-                           'supereval_assignment/%s/' % a_id]
+                           'supereval_assignment/%s/0/' % a_id]
         for prof_view in list_prof_views:
             print(prof_view)
             response = self.client.get(('/%s' % prof_view))
             self.assertEqual(response.status_code, 302)
 
-    # TODO: test submit, grade, get eval
+    def test_submit_assignment_view(self):
+        """
+        Test submitting a new assignment
+        """
+        self.assignmentype.deadline_submission = '2002-02-02 22:59:30+00:00'
+        self.assignmentype.save()
+        assignment = Assignment.objects.filter(assignmentype=self.assignmentype,
+                                               student=self.student).first()
+        with open(assignment_file) as fs:
+            response = self.client.post('/upload_assignment/%s/' %
+                                        assignment.id, {'document': fs})
+        self.assertContains(response, 'TOO LATE TO SUBMIT!')
+        self.assignmentype.deadline_submission = '2020-02-02 22:59:30+00:00'
+        self.assignmentype.save()
+        with open(assignment_file) as fs:
+            response = self.client.post('/upload_assignment/%s/' %
+                                        assignment.id, {'document': fs})
+        self.assertEqual(response.status_code, 302)
+        assignment = Assignment.objects.filter(assignmentype=self.assignmentype,
+                                               student=self.student).first()
+        assignment_extension = assignment_file.split('.')[-1]
+        self.assertIn(assignment_extension, assignment.document.name)
+
+#     def test_eval_assignment_view(self):
+#         """
+#         Test evaluate assignment
+#         """
+#         TODO

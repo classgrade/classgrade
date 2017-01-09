@@ -1,8 +1,89 @@
 # coding=utf-8
+import csv
+import logging
 from random import shuffle
 from django.core.mail import send_mail
+from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth.models import User
+from xkcdpass import xkcd_password as xp
+from unidecode import unidecode
 from classgrade import settings
 from gradapp.models import Assignmentype, Evalassignment, Evalquestion
+from gradapp.models import Student, Assignment
+from gradapp.views import make_error_message
+
+logger = logging.getLogger(__name__)
+
+
+def get_students(csv_file):
+    """
+    :param csv_file: csv file with list of students.\
+        Each row contains: first_name, last_name, email
+    :type csv_file: str
+    :rtype: 2 lists existing_students and new_students [[username, email], ..]
+    """
+
+    with open(csv_file) as ff:
+        reader = csv.reader(ff, delimiter=',')
+        existing_students = []
+        new_students = []
+        for i, row in enumerate(reader):
+            row = [unidecode(x.strip()) for x in row[:3]]
+            username = "_".join(row[:2])
+            username = username.replace(" ", "_")
+            email = row[2]
+            try:
+                u = User.objects.get(username=username)
+                Student.objects.get(user=u)
+                existing_students.append([u.username, u.email])
+            except ObjectDoesNotExist:
+                new_students.append([username, email])
+    return existing_students, new_students
+
+
+def create_assignment(assignmentype_pk, existing_students, new_students):
+    """
+    For an assignmentype, create new students; and for new+existing students
+    create their assignment row.
+
+    :param assignmentype_pk: id of the assignmentype
+    :param existing_students: list with existing students, each element is a
+    list with student username and email.
+    :param new_students: list with new students, each element is a list with
+    student username and email.
+
+    :type assignmentype_pk: integer
+    :type existing_students: list of list of 2 strings
+    :type new_students: list of list of 2 strings
+    """
+    words = xp.locate_wordfile()
+    mywords = xp.generate_wordlist(wordfile=words, min_length=4,
+                                   max_length=6)
+    assignmentype = Assignmentype.objects.get(id=assignmentype_pk)
+    for assignment in assignmentype.assignment_set.all():
+        assignment.delete()
+    for st in existing_students:
+        student = Student.objects.get(user__username=st[0])
+        # Get an existing assignment or create it
+        Assignment.objects.get_or_create(student=student,
+                                         assignmentype=assignmentype)
+
+    for st in new_students:
+        password = xp.generate_xkcdpassword(mywords, numwords=4)
+        u = User.objects.create_user(st[0], st[1], password)
+        student = Student.objects.create(user=u)
+        # Send email
+        try:
+            email_new_student(u.email, u.username, password)
+        except Exception as e:
+            logger.error('Not possible to email new student %s: %s' %
+                         (u.username, make_error_message(e)))
+        # Create the assignment
+        Assignment.objects.create(student=student,
+                                  assignmentype=assignmentype)
+    # Create associated Evalassignment
+    log = create_evalassignment(assignmentype.title)
+    logger.info(log)
 
 
 def create_evalassignment(assignmentype_title):

@@ -156,7 +156,7 @@ Assignment {{ assignmentype.title }}
                             <td><br><button type="button" class="btn btn-default">{{ assignment.mean|floatformat:2 }}</button></td>
                             <td><br><button type="button" class="btn btn-default">{{ assignment.std|floatformat:2 }}</button></td>
                           {% endif %}
-                          <td><a class="btn btn-primary" href="{% url 'gradapp:supereval_assignment' assignment.id %}" onclick="return confirm('Are you sure you want to superevaluate this assignment?\nYou can not remove this superevaluation afterwards...');"><span class="glyphicon glyphicon-pencil"></span></a></td>
+                          <td><a class="btn btn-primary" href="{% url 'gradapp:supereval_assignment' assignment.id 0 %}" onclick="return confirm('Are you sure you want to superevaluate this assignment?\nYou can not remove this superevaluation afterwards...');"><span class="glyphicon glyphicon-pencil"></span></a></td>
                         </tr>
                       {% endfor %}
                     </tbody>

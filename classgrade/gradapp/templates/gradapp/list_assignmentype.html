@@ -44,7 +44,7 @@ Your {{ type_assignmentype }} assignment list:
                             <td><a class="btn btn-primary" href="{% url 'gradapp:detail_assignmentype' assignmentype.id %}"> <span class="glyphicon glyphicon-zoom-in"></span></a></td>
                             {% if type_assignmentype == 'running' %}
                             <td><a class="btn btn-info" href="{% url 'gradapp:modify_assignmentype' assignmentype.id %}"> <span class="glyphicon glyphicon-pencil"></span></a></td>
-                            <td><a class="btn btn-default" href="{% url 'gradapp:reset_assignmentype' assignmentype_id=assignmentype.id %}" onclick="return confirm('Are you sure you want to modify the student list of this assignment? If yes, all former work will be lost!');"> <span class="glyphicon glyphicon-paperclip"></span></a></td>
+                            <td><a class="btn btn-default" href="{% url 'gradapp:reset_assignmentype' assignmentype_id=assignmentype.id %}" onclick="return confirm('Are you sure you want to modify the student list of this assignment? If yes, all former work will be lost!');"> <span class="glyphicon glyphicon-repeat"></span></a></td>
                             <td><a class="btn btn-danger" href="{% url 'gradapp:archive_assignmentype' assignmentype.id %}" onclick="return confirm('Are you sure you want to archive this assignment?');"> <span class="glyphicon glyphicon-pushpin"></span></a></td>
                             {% endif %}
                             <td><a class="btn btn-warning" href="{% url 'gradapp:delete_assignmentype' assignmentype.id 1 %}" onclick="return confirm('Are you sure you want to delete this assignment?');"> <span class="glyphicon glyphicon-remove"></span></a></td>

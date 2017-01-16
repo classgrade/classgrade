@@ -127,10 +127,10 @@ def base_eval_assignment(request, evalassignment, i, url_action, url_cancel):
             error = 'Too late to grade or to modify your grading...'
     assignmentype = evalassignment.assignment.assignmentype
     if assignmentype.questions_statement:
-        list_questions = [ '%s: %s' % (i + 1, s) for i, s in
+        list_questions = [ '%s: %s' % (j + 1, s) for j, s in
                           enumerate(assignmentype.questions_statement)]
     else:
-        list_questions = [i for i in range(1, assignmentype.nb_questions + 1)]
+        list_questions = [j for j in range(1, assignmentype.nb_questions + 1)]
     context = {'formset': zip(formset, list_questions),
                'formset_management_form': formset.management_form,
                'title': assignmentype.title,

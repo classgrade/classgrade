@@ -10,7 +10,6 @@ from unidecode import unidecode
 from classgrade import settings
 from gradapp.models import Assignmentype, Evalassignment, Evalquestion
 from gradapp.models import Student, Assignment
-from gradapp.views import make_error_message
 
 logger = logging.getLogger(__name__)
 
@@ -76,8 +75,12 @@ def create_assignment(assignmentype_pk, existing_students, new_students):
         try:
             email_new_student(u.email, u.username, password)
         except Exception as e:
+            if hasattr(e, 'traceback'):
+                message =  str(e.traceback)
+            else:
+                message = repr(e)
             logger.error('Not possible to email new student %s: %s' %
-                         (u.username, make_error_message(e)))
+                         (u.username, message))
         # Create the assignment
         Assignment.objects.create(student=student,
                                   assignmentype=assignmentype)

@@ -76,6 +76,24 @@ class ProfViewTests(TestCase):
     def setUp(self):
         self.client.login(username=username_prof, password=pwd_prof)
 
+
+    def test_list_assignmentype(self):
+        """
+        Test no error to get pages listing all assignmentype
+        """
+        for page in ['/list_assignmentypes_running/',
+                     '/list_assignmentypes_archived/']:
+            response = self.client.get(page)
+            self.assertEqual(response.status_code, 200)
+
+    def test_detail_assignmentype(self):
+        """
+        Test no error to get the detail assignmentype page
+        """
+        response = self.client.get('/detail_assignmentype/%s/' %
+                                   self.assignmentype.id)
+        self.assertEqual(response.status_code, 200)
+
     def test_create_assignmentype(self):
         test_title = 'test create'
         # Create a new test student file with an additional student
@@ -117,9 +135,15 @@ class ProfViewTests(TestCase):
         os.system('rm %s' % new_file_students)
 
     def test_insert_question(self):
+        """
+        Test no error when adding or removing a question of an assignmentype
+        """
         for cd in [-1, 1]:
             assignmentype = Assignmentype.objects.get(id=self.assignmentype.id)
             nb_questions = assignmentype.nb_questions
+            response = self.client.get('/insert_question_assignmentype/%s/%s/' %
+                                       (self.assignmentype.id, cd))
+            self.assertEqual(response.status_code, 200)
             response = self.client.post(
                 '/insert_question_assignmentype/%s/%s/' %
                 (self.assignmentype.id, cd), {'question': 1})
@@ -128,7 +152,42 @@ class ProfViewTests(TestCase):
             self.assertEqual(nb_questions + cd, assignmentype.nb_questions)
 
 
-    # TODO: test coeff
+    def test_set_coeff(self):
+        """
+        Test no error when setting up coefficient of an assignmentype
+        """
+        assignmentype = Assignmentype.objects.get(id=self.assignmentype.id)
+        response = self.client.get('/coeff_assignmentype/%s/' %
+                                   self.assignmentype.id)
+        self.assertEqual(response.status_code, 200)
+        dict_post = {}
+        coeff = list(range(1, assignmentype.nb_questions + 1))
+        for i in coeff:
+            dict_post['coeff_%s' % i] = i
+        response = self.client.post('/coeff_assignmentype/%s/' %
+                                    self.assignmentype.id, dict_post)
+        self.assertEqual(response.status_code, 302)
+        assignmentype = Assignmentype.objects.get(id=self.assignmentype.id)
+        self.assertEqual(assignmentype.questions_coeff, coeff)
+
+    def test_set_problem_statement(self):
+        """
+        Test no error when setting up problem statements of an assignmentype
+        """
+        response = self.client.get('/statement_assignmentype/%s/' %
+                                   self.assignmentype.id)
+        self.assertEqual(response.status_code, 200)
+        dict_post = {}
+        statements = ['blablabla %s' % i
+                      for i in range(1, self.assignmentype.nb_questions + 1)]
+        for i, statement in enumerate(statements):
+            dict_post['statement_%s' % (i + 1)] = statement
+        response = self.client.post('/statement_assignmentype/%s/' %
+                                    self.assignmentype.id, dict_post)
+        self.assertEqual(response.status_code, 302)
+        assignmentype = Assignmentype.objects.get(id=self.assignmentype.id)
+        self.assertEqual(assignmentype.questions_statement, statements)
+
 
 class StudentViewTests(TestCase):
 

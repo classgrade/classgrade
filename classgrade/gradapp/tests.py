@@ -6,6 +6,7 @@ from django.test import TestCase
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.contrib.auth.models import User
 from gradapp.models import Student, Prof, Assignmentype, Assignment
+from gradapp.models import Evalassignment, Evalquestion
 from gradapp import tasks
 
 
@@ -271,8 +272,38 @@ class StudentViewTests(TestCase):
         assignment_extension = assignment_file.split('.')[-1]
         self.assertIn(assignment_extension, assignment.document.name)
 
-#     def test_eval_assignment_view(self):
-#         """
-#         Test evaluate assignment
-#         """
-#         TODO
+    def test_eval_assignment_view(self):
+        """
+        Test evaluate assignment
+        """
+        evalassignment = Evalassignment.objects.filter(
+            evaluator=self.student.user,
+            assignment__assignmentype=self.assignmentype).first()
+        # Test not possible to evaluate before the submission deadline
+        response = self.client.get('/eval_assignment/%s/%s/' %
+                                   (evalassignment.id, 0))
+        self.assertEqual(response.url, '/dashboard_student/#assignment%s' %
+                         evalassignment.assignment.id)
+        # Test eval after submission deadline
+        self.assignmentype.deadline_submission = '2002-02-02 22:59:30+00:00'
+        self.assignmentype.save()
+        response = self.client.get('/eval_assignment/%s/%s/' %
+                                   (evalassignment.id, 0))
+        self.assertEqual(response.status_code, 200)
+        nb_questions = self.assignmentype.nb_questions
+        list_evalquestions = [evalquestion.id for evalquestion in Evalquestion.\
+                              objects.filter(evalassignment=evalassignment).\
+                              order_by('question')]
+        dict_post = {'form-TOTAL_FORMS': str(nb_questions),
+                     'form-INITIAL_FORMS': str(nb_questions)}  # ,
+                     #'form-MIN_NUM_FORMS': 0,
+                     #'form-MAX_NUM_FORMS': 1000}
+        for i, evalquestion_id in enumerate(list_evalquestions):
+            dict_post['form-%s-id' % i] = evalquestion_id
+            dict_post['form-%s-grade' % i] = 2
+            dict_post['form-%s-comments' % i] = 'marvelous'
+        response = self.client.post('/eval_assignment/%s/%s/' %
+                                    (evalassignment.id, 0), dict_post)
+        self.assertEqual(response.status_code, 302)
+        graded_evalassignment = Evalassignment.objects.get(id=evalassignment.id)
+        self.assertEqual(graded_evalassignment.grade_assignment, 20)

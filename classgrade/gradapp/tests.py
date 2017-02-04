@@ -21,6 +21,22 @@ pwd_test_student = 'top_secret'
 test_assignment_title = 'Test'
 username_prof = 'super_prof'
 pwd_prof = 'tip_top'
+list_prof_views_full = ['list_assignmentypes_running/',
+                        'list_assignmentypes_archived/',
+                        'create_assignmentype/',
+                        'validate_assignmentype_students/',
+                        'create_assignmentype_students/']
+list_prof_views_part = ['detail_assignmentype/ID/',
+                       'show_eval_distrib/ID/',
+                       'csv_grades/ID/',
+                       'zip_assignments/ID/',
+                       'archive_assignmentype/ID/',
+                       'delete_assignmentype/ID/1/',
+                       'reset_assignmentype/ID/',
+                       'modify_assignmentype/ID/',
+                       'coeff_assignmentype/ID/',
+                       'statement_assignmentype/ID/',
+                       'insert_question_assignmentype/ID/1/']
 
 
 def create_assignmentype(prof, title=test_assignment_title, description='test',
@@ -96,6 +112,10 @@ class ProfViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_create_assignmentype(self):
+        # 1- Test get
+        response = self.client.get(reverse('gradapp:create_assignmentype'))
+        self.assertEqual(response.status_code, 200)
+        # 2- Test post
         test_title = 'test create'
         # Create a new test student file with an additional student
         new_file_students = 'temp_students.csv'
@@ -189,6 +209,20 @@ class ProfViewTests(TestCase):
         assignmentype = Assignmentype.objects.get(id=self.assignmentype.id)
         self.assertEqual(assignmentype.questions_statement, statements)
 
+    def test_get_info_assignmentype(self):
+        """
+        Test no error when looking at the distribution of evaluations, or when
+        asking for a zip of all assignment, or get a csv with students' grades
+        """
+        list_url = ['/show_eval_distrib/',
+                    '/csv_grades/',
+                    '/zip_assignments/']
+        list_url = [u + '%s/' % self.assignmentype.id for u in list_url]
+        for u in list_url:
+            response = self.client.get(u)
+            self.assertEqual(response.status_code, 200)
+
+
 
 class StudentViewTests(TestCase):
 
@@ -228,22 +262,9 @@ class StudentViewTests(TestCase):
         No access for a student to pages for professors
         """
         a_id = self.assignmentype.id
-        list_prof_views = ['list_assignmentypes_running/',
-                           'list_assignmentypes_archived/',
-                           'detail_assignmentype/%s/' % a_id,
-                           'show_eval_distrib/%s/' % a_id,
-                           'csv_grades/%s/' % a_id,
-                           'zip_assignments/%s/' % a_id,
-                           'create_assignmentype/',
-                           'archive_assignmentype/%s/' % a_id,
-                           'delete_assignmentype/%s/1/' % a_id,
-                           'reset_assignmentype/%s/' % a_id,
-                           'modify_assignmentype/%s/' % a_id,
-                           'coeff_assignmentype/%s/' % a_id,
-                           'insert_question_assignmentype/%s/1/' % a_id,
-                           'validate_assignmentype_students/',
-                           'create_assignmentype_students/',
-                           'supereval_assignment/%s/0/' % a_id]
+        list_prof_views = [u.replace('ID', str(a_id))
+                           for u in list_prof_views_part]
+        list_prof_views += list_prof_views_full
         for prof_view in list_prof_views:
             print(prof_view)
             response = self.client.get(('/%s' % prof_view))

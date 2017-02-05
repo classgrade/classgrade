@@ -244,7 +244,8 @@ def upload_assignment(request, pk):
                 return redirect('gradapp:dashboard_student')
         else:
             form = AssignmentForm(instance=assignment)
-            error = 'TOO LATE TO SUBMIT!'
+            if assignment.assignmentype.deadline_submission <= timezone.now():
+                error = 'TOO LATE TO SUBMIT!'
         context = {'form': form, 'title': assignment.assignmentype.title,
                    'description': assignment.assignmentype.description,
                    'deadline': assignment.assignmentype.deadline_submission,

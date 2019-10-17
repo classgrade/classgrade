@@ -11,7 +11,7 @@ pandas==0.19.2
 psycopg2==2.6.2
 python-openid==2.2.5
 pytz==2016.6.1
-requests==2.11.1
+requests==2.20.0
 requests-oauthlib==0.6.2
 six==1.10.0
 Unidecode==0.4.19
